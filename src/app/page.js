@@ -1,103 +1,132 @@
+// components/ui/LandingPage.jsx
 import Image from "next/image";
+import Link from "next/link";
+import WhyChooseUsCard from "./components/ui/WhyChooseUsCard";
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+export default function LandingPage() {
+  // Card data
+  const whyChooseUsCards = [
+    {
+      icon: (
+        <img
+          src="/why-us-card-icons/1.svg"
+          className="w-full h-full"
+          alt="Blazing Fast Speeds"
         />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+      ),
+      heading: "Blazing Fast Speeds",
+      subheading: "Fiber-powered internet up to 1Gbps",
+    },
+    {
+      icon: (
+        <img
+          src="/why-us-card-icons/2.svg"
+          className="w-full h-full"
+          alt="Reliable & Secure"
+        />
+      ),
+      heading: "Reliable & Secure",
+      subheading: "99.9% uptime with advanced protection",
+    },
+    {
+      icon: (
+        <img
+          src="/why-us-card-icons/3.svg"
+          className="w-full h-full"
+          alt="24/7 Support"
+        />
+      ),
+      heading: "24/7 Support",
+      subheading: "Always here when you need us",
+    },
+    {
+      icon: (
+        <img
+          src="/why-us-card-icons/4.svg"
+          className="w-full h-full"
+          alt="Affordable Packages"
+        />
+      ),
+      heading: "Affordable Packages",
+      subheading: "Plans for every budget",
+    },
+  ];
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+  return (
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden" style={{ height: '100vh' }}>
+        {/* Background Image with gradient overlay and fade effects */}
+        <div className="absolute inset-0">
+          {/* Background image container with fade effects */}
+          <div className="relative mt-45 w-full h-[70%] overflow-hidden">
+            {/* Background Image */}
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+              src="/city.png"
+              alt="City skyline with fiber optic cables"
+              fill
+              sizes="100vw"
+              style={{ objectFit: "cover", opacity: '70%' }}
+              priority
+              quality={80}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+
+            {/* Fade Top (0 -> 100% opacity) */}
+            <div className="top-0 left-0 absolute bg-gradient-to-b from-white to-transparent w-full h-[25%]"></div>
+
+            {/* Fade Bottom (100% -> 0 opacity) */}
+            <div className="bottom-0 left-0 absolute bg-gradient-to-t from-white to-transparent w-full h-[25%]"></div>
+          </div>
+
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Content */}
+        <div className="z-10 relative flex items-center mx-auto md:ml-25 px-4 sm:px-6 lg:px-8 py-24 md:py-32 max-w-[80vw] md:max-w-[55vw] h-full">
+          <div className="flex md:flex-row flex-col justify-between items-center w-full">
+            {/* Left Content */}
+            <div className="mb-12 md:mb-0 md:text-left text-center">
+              <h1 className="mb-6 font-bold text-gray-800 text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight">
+                Connecting You to the Future with Ultra-Fast Internet
+              </h1>
+              <p className="mx-auto md:mx-0 mb-8 text-gray-700 text-base sm:text-lg md:text-xl">
+                Reliable, Affordable, and Lightning-Fast Internet for Home & Business.
+              </p>
+              <div className="flex sm:flex-row flex-col justify-center md:justify-start gap-4">
+                <Link
+                  href="/plans"
+                  className="bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] shadow-md hover:shadow-lg px-6 py-3 rounded-lg w-full sm:w-auto font-medium text-white text-base sm:text-lg transition-all duration-200"
+                >
+                  View Plans
+                </Link>
+                <Link
+                  href="/coverage"
+                  className="bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] shadow-md hover:shadow-lg px-6 py-3 rounded-lg w-full sm:w-auto font-medium text-white text-base sm:text-lg transition-all duration-200"
+                >
+                  Check Coverage
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Choose Us Section */}
+      <section className="z-10 relative mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 max-w-7xl">
+        <h2 className="mb-8 sm:mb-12 font-bold text-gray-800 text-2xl sm:text-3xl text-center">
+          Why Choose Us
+        </h2>
+
+        <div className="gap-6 sm:gap-8 grid grid-cols-1 md:grid-cols-2 px-5 md:px-15">
+          {whyChooseUsCards.map((card, index) => (
+            <WhyChooseUsCard
+              key={index}
+              icon={card.icon}
+              heading={card.heading}
+              subheading={card.subheading}
+            />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
