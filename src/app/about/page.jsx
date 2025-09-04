@@ -119,7 +119,7 @@ export default function AboutPage() {
         {/* Content */}
         <div className="z-10 relative mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 max-w-7xl">
           <div className="mx-auto max-w-4xl text-center">
-            <h1 className="mb-6 font-bold text-gray-800 text-3xl md:text-4xl md:text-5xl lg:text-6xl">
+            <h1 className="mb-6 font-bold text-gray-800 text-3xl md:text-5xl lg:text-6xl">
               About HIGH TECH
             </h1>
             <p className="mb-2 md:mb-8 text-gray-600 text-lg md:text-xl">
