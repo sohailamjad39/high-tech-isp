@@ -1,10 +1,22 @@
 @import "tailwindcss";
 
 :root {
-    --font-lexend: 'Lexend', sans-serif;
+  --font-lexend: "Lexend", sans-serif;
+}
+
+body {
+  font-family: var(--font-lexend);
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
-  
-  body {
-    font-family: var(--font-lexend);
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
-  
+}

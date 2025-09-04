@@ -1,10 +1,35 @@
 // components/ui/Navbar.jsx
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close the mobile menu when the route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
+
+  // Close the mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const navbar = document.querySelector('nav');
+      if (isMenuOpen && navbar && !navbar.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   return (
     <nav className="top-0 right-0 left-0 z-50 fixed bg-transparent shadow-sm backdrop-blur-sm">
@@ -132,12 +157,14 @@ export default function Navbar() {
             >
               Contact
             </Link>
+            <div className="flex justify-center align-middle">
             <Link
               href="/order"
-              className="block bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] shadow-md hover:shadow-lg mt-2 px-3 py-2 rounded-md w-full font-medium text-white text-base text-center transition-all duration-200"
+              className="block bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] shadow-md hover:shadow-lg mt-2 px-3 py-2 rounded-md w-[70%] font-medium text-white text-base text-center transition-all duration-200"
             >
               Get Started
             </Link>
+            </div>
           </div>
         </div>
       )}
