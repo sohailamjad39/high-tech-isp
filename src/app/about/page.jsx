@@ -122,7 +122,7 @@ export default function AboutPage() {
             <h1 className="mb-6 font-bold text-gray-800 text-3xl md:text-5xl lg:text-6xl">
               About HIGH TECH
             </h1>
-            <p className="mb-2 md:mb-8 text-gray-600 text-lg md:text-xl">
+            <p className="mb-2 md:mb-8 text-gray-600 text-base md:text-xl">
               We're on a mission to connect communities with the fastest, most reliable internet possible.
             </p>
           </div>

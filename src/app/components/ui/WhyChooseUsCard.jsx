@@ -14,7 +14,7 @@ export default function WhyChooseUsCard({ icon, heading, subheading }) {
           <h3 className="font-semibold text-gray-800 text-lg md:text-lg sm:text-xl">
             {heading}
           </h3>
-          <p className="mt-1 text-gray-600 text-sm sm:text-base">
+          <p className="mt-1 text-gray-600 text-xs md:text-sm sm:text-base">
             {subheading}
           </p>
         </div>
