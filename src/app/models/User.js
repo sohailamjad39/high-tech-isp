@@ -45,11 +45,6 @@ const UserSchema = new mongoose.Schema({
     type: Date
   },
   preferences: {
-    theme: {
-      type: String,
-      enum: ['light', 'dark', 'system'],
-      default: 'system'
-    },
     notifications: {
       email: { type: Boolean, default: true },
       sms: { type: Boolean, default: false },
@@ -122,20 +117,5 @@ UserSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.passwordHash);
 };
 
-// Virtual for customer profile
-UserSchema.virtual('customerProfile', {
-  ref: 'CustomerProfile',
-  localField: '_id',
-  foreignField: 'userId',
-  justOne: true
-});
-
-// Virtual for technician
-UserSchema.virtual('technician', {
-  ref: 'Technician',
-  localField: '_id',
-  foreignField: 'userId',
-  justOne: true
-});
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

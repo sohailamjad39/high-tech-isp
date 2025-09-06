@@ -2,155 +2,69 @@
 "use client"
 import PlansCard from '../components/ui/PlansCard';
 import { useState, useEffect, useRef } from 'react';
-
-// Mock data - this would come from your database in a real app
-const mockPlans = [
-  {
-    _id: '1',
-    name: 'Basic Fiber',
-    slug: 'basic-fiber',
-    speedMbps: { download: 100, upload: 50 },
-    dataCapGB: null,
-    priceMonthly: 49.99,
-    priceYearly: 549.89,
-    currency: 'USD',
-    contractMonths: 0,
-    features: [
-      '100 Mbps Download Speed',
-      '50 Mbps Upload Speed',
-      'Unlimited Data',
-      'Free Router',
-      '24/7 Support'
-    ],
-    description: 'Perfect for everyday browsing and streaming',
-    active: true,
-    tags: [],
-    priority: 1,
-    trialDays: 0,
-    setupFee: 0,
-    equipmentIncluded: true
-  },
-  {
-    _id: '2',
-    name: 'Standard Fiber',
-    slug: 'standard-fiber',
-    speedMbps: { download: 300, upload: 150 },
-    dataCapGB: null,
-    priceMonthly: 69.99,
-    priceYearly: 769.89,
-    currency: 'USD',
-    contractMonths: 0,
-    features: [
-      '300 Mbps Download Speed',
-      '150 Mbps Upload Speed',
-      'Unlimited Data',
-      'Free Router',
-      'Priority Support',
-      'Gaming Optimization'
-    ],
-    description: 'Ideal for families and heavy streamers',
-    active: true,
-    tags: ['popular'],
-    priority: 2,
-    trialDays: 0,
-    setupFee: 0,
-    equipmentIncluded: true
-  },
-  {
-    _id: '3',
-    name: 'Premium Fiber',
-    slug: 'premium-fiber',
-    speedMbps: { download: 1000, upload: 500 },
-    dataCapGB: null,
-    priceMonthly: 99.99,
-    priceYearly: 1099.89,
-    currency: 'USD',
-    contractMonths: 0,
-    features: [
-      '1 Gbps Download Speed',
-      '500 Mbps Upload Speed',
-      'Unlimited Data',
-      'Advanced Router',
-      'Priority Support',
-      'Gaming Optimization',
-      '4K Streaming Priority',
-      'Dedicated Line'
-    ],
-    description: 'Ultimate speed for power users',
-    active: true,
-    tags: [],
-    priority: 3,
-    trialDays: 0,
-    setupFee: 0,
-    equipmentIncluded: true
-  },
-  {
-    _id: '4',
-    name: 'Business Fiber',
-    slug: 'business-fiber',
-    speedMbps: { download: 500, upload: 500 },
-    dataCapGB: null,
-    priceMonthly: 149.99,
-    priceYearly: 1599.89,
-    currency: 'USD',
-    contractMonths: 0,
-    features: [
-      '500 Mbps Symmetric Speed',
-      'Static IP Address',
-      'Dedicated Support Line',
-      'SLA 99.9% Uptime',
-      'Advanced Security',
-      'Business-Class Equipment'
-    ],
-    description: 'Reliable connectivity for your business',
-    active: true,
-    tags: ['business'],
-    priority: 4,
-    trialDays: 0,
-    setupFee: 0,
-    equipmentIncluded: true
-  },
-  {
-    _id: '5',
-    name: 'Gamer Fiber',
-    slug: 'gamer-fiber',
-    speedMbps: { download: 1000, upload: 1000 },
-    dataCapGB: null,
-    priceMonthly: 129.99,
-    priceYearly: 1399.89,
-    currency: 'USD',
-    contractMonths: 0,
-    features: [
-      '1 Gbps Symmetric Speed',
-      'Low Latency Optimization',
-      'Priority Queuing',
-      'Cloud Gaming Ready',
-      'Advanced Router',
-      '24/7 Support'
-    ],
-    description: 'Ultra-low latency for competitive gaming',
-    active: true,
-    tags: ['gamer'],
-    priority: 5,
-    trialDays: 0,
-    setupFee: 0,
-    equipmentIncluded: true
-  }
-];
+import { useRouter } from 'next/navigation';
 
 export default function PlansPage() {
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [session, setSession] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visiblePlans, setVisiblePlans] = useState(1);
   const plansContainerRef = useRef(null);
   const [showLeftGradient, setShowLeftGradient] = useState(false);
   const [showRightGradient, setShowRightGradient] = useState(true);
+  
+  const router = useRouter();
 
-  // Simulate loading data from database
+  // Fetch session from API instead of using useSession
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 200);
-    return () => clearTimeout(timer);
+    const fetchSession = async () => {
+      try {
+        const response = await fetch('/api/auth/session');
+        const data = await response.json();
+        
+        if (data.user) {
+          setSession(data.user);
+        } else {
+          setSession(null);
+        }
+      } catch (err) {
+        setSession(null);
+      }
+    };
+
+    fetchSession();
+  }, []);
+
+  // Fetch plans from API
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/plans');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch plans');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          setPlans(data.plans);
+        } else {
+          throw new Error(data.message || 'Failed to fetch plans');
+        }
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching plans:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
   }, []);
 
   // Update visible plans based on screen size
@@ -170,30 +84,18 @@ export default function PlansPage() {
     return () => window.removeEventListener('resize', updateVisiblePlans);
   }, []);
 
-  // Filter and sort active plans
-  const activePlans = mockPlans
-    .filter(plan => plan.active)
-    .sort((a, b) => a.priority - b.priority);
-
-  const totalPlans = activePlans.length;
-
   // Calculate max index based on visible plans
+  const totalPlans = plans.length;
   const maxIndex = Math.max(0, totalPlans - visiblePlans);
 
   // Navigate to previous plan
   const goToPrev = () => {
-    setCurrentIndex(prev => {
-      const newIndex = Math.max(0, prev - 1);
-      return newIndex;
-    });
+    setCurrentIndex(prev => Math.max(0, prev - 1));
   };
 
   // Navigate to next plan
   const goToNext = () => {
-    setCurrentIndex(prev => {
-      const newIndex = Math.min(maxIndex, prev + 1);
-      return newIndex;
-    });
+    setCurrentIndex(prev => Math.min(maxIndex, prev + 1));
   };
 
   // Handle dot indicator click
@@ -213,14 +115,74 @@ export default function PlansPage() {
     setShowRightGradient(currentIndex < maxIndex);
   }, [currentIndex, totalPlans, visiblePlans, maxIndex]);
 
+  // Handle plan selection
   const handleChoosePlan = (plan) => {
-    setSelectedPlan(plan);
-    console.log(`Selected plan: ${plan.name}`);
+    if (!session) {
+      // Redirect to login if not authenticated
+      router.push(`/auth/login?callbackUrl=/plans/checkout/${plan.slug}`);
+      return;
+    }
+    
+    // Navigate to checkout with plan slug
+    router.push(`/plans/checkout/${plan.slug}`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <div className="z-10 relative mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 max-w-7xl">
+          <div className="mb-16 text-center">
+            <h1 className="mb-6 font-bold text-gray-800 text-2xl md:text-5xl lg:text-6xl">
+              Choose Your Perfect Plan
+            </h1>
+            <p className="mx-2 md:mx-auto max-w-3xl text-gray-600 text-lg md:text-xl">
+              Loading plans...
+            </p>
+          </div>
+
+          <div className="relative mx-auto max-w-7xl">
+            <div className="hidden md:block">
+              <div className="py-15 overflow-hidden">
+                <div className="flex">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="flex-shrink-0 px-4 w-full md:w-1/2 lg:w-1/3">
+                      <div className="bg-white/80 shadow-lg backdrop-blur-sm p-6 border border-white/20 rounded-2xl animate-pulse">
+                        <div className="bg-gray-200 mb-4 rounded h-6"></div>
+                        <div className="bg-gray-200 mb-6 rounded w-3/4 h-4"></div>
+                        <div className="bg-gray-200 mb-6 rounded h-12"></div>
+                        <div className="bg-gray-200 mb-8 rounded h-20"></div>
+                        <div className="bg-gray-200 rounded h-12"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <h2 className="font-bold text-red-600 text-2xl">Error Loading Plans</h2>
+          <p className="mt-2 text-gray-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 hover:bg-blue-700 mt-4 px-4 py-2 rounded-lg text-white"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
-
       {/* Content */}
       <div className="z-10 relative mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 max-w-7xl">
         <div className="mb-16 text-center">
@@ -242,24 +204,21 @@ export default function PlansPage() {
         </div>
 
         {/* Plans Carousel */}
-        <div className="relative mx-auto max-w-7xl">
+        <div className="relative mx-auto mt-[-70] max-w-7xl scale-95">
           {/* Mobile Layout - Arrows and cards in same row */}
           <div className="md:hidden flex items-center">
             {/* Left Arrow */}
-            <button
-              onClick={goToPrev}
-              disabled={currentIndex === 0}
-              className={`scale-50 rounded-full w-1 ${
-                currentIndex === 0 
-                  ? 'hidden' 
-                  : 'shadow-lg hover:shadow-xl backdrop-blur-sm border border-white/30 text-gray-700'
-              }`}
-              aria-label="Previous plan"
-            >
-              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
+            {currentIndex > 0 && (
+              <button
+                onClick={goToPrev}
+                className="shadow-lg hover:shadow-xl backdrop-blur-sm mr-[-5] ml-[-3] border border-white/30 rounded-full w-1 text-gray-700 scale-50"
+                aria-label="Previous plan"
+              >
+                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
 
             {/* Plans Container */}
             <div className="flex-1 overflow-hidden scale-90">
@@ -268,47 +227,29 @@ export default function PlansPage() {
                 className="flex transition-transform duration-500 ease-out"
                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
               >
-                {isLoading ? (
-                  // Skeleton loading state
-                  Array.from({ length: 5 }).map((_, index) => (
-                    <div key={index} className="flex-shrink-0 px-4 w-full">
-                      <div className="bg-white/80 shadow-lg backdrop-blur-sm p-6 border border-white/20 rounded-2xl animate-pulse">
-                        <div className="bg-gray-200 mb-4 rounded h-6"></div>
-                        <div className="bg-gray-200 mb-6 rounded w-3/4 h-4"></div>
-                        <div className="bg-gray-200 mb-6 rounded h-12"></div>
-                        <div className="bg-gray-200 mb-8 rounded h-20"></div>
-                        <div className="bg-gray-200 rounded h-12"></div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  activePlans.map((plan) => (
-                    <div key={plan._id} className="flex-shrink-0 px-4 w-full">
-                      <PlansCard 
-                        plan={plan} 
-                        onChoosePlan={handleChoosePlan}
-                      />
-                    </div>
-                  ))
-                )}
+                {plans.map((plan) => (
+                  <div key={plan._id} className="flex-shrink-0 px-4 w-full">
+                    <PlansCard 
+                      plan={plan} 
+                      onChoosePlan={handleChoosePlan}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Right Arrow */}
-            <button
-              onClick={goToNext}
-              disabled={currentIndex === maxIndex}
-              className={`scale-50 rounded-full w-3 ml-[-20] mr-2 ${
-                currentIndex === maxIndex 
-                  ? 'hidden' 
-                  : 'shadow-lg hover:shadow-xl backdrop-blur-sm border border-white/30 text-gray-700'
-              }`}
-              aria-label="Next plan"
-            >
-              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+            {currentIndex < maxIndex && (
+              <button
+                onClick={goToNext}
+                className="shadow-lg hover:shadow-xl backdrop-blur-sm mr-2 ml-[-20] border border-white/30 rounded-full w-3 text-gray-700 scale-50"
+                aria-label="Next plan"
+              >
+                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
 
           {/* Desktop Layout */}
@@ -349,29 +290,14 @@ export default function PlansPage() {
                   className="flex transition-transform duration-500 ease-out"
                   style={{ transform: `translateX(-${(currentIndex * 100) / visiblePlans}%)` }}
                 >
-                  {isLoading ? (
-                    // Skeleton loading state
-                    Array.from({ length: 5 }).map((_, index) => (
-                      <div key={index} className="flex-shrink-0 px-4 w-full md:w-1/2 lg:w-1/3">
-                        <div className="bg-white/80 shadow-lg backdrop-blur-sm p-6 border border-white/20 rounded-2xl animate-pulse">
-                          <div className="bg-gray-200 mb-4 rounded h-6"></div>
-                          <div className="bg-gray-200 mb-6 rounded w-3/4 h-4"></div>
-                          <div className="bg-gray-200 mb-6 rounded h-12"></div>
-                          <div className="bg-gray-200 mb-8 rounded h-20"></div>
-                          <div className="bg-gray-200 rounded h-12"></div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    activePlans.map((plan) => (
-                      <div key={plan._id} className="flex-shrink-0 px-4 w-full md:w-1/2 lg:w-1/3">
-                        <PlansCard 
-                          plan={plan} 
-                          onChoosePlan={handleChoosePlan}
-                        />
-                      </div>
-                    ))
-                  )}
+                  {plans.map((plan) => (
+                    <div key={plan._id} className="flex-shrink-0 px-4 w-full md:w-1/2 lg:w-1/3">
+                      <PlansCard 
+                        plan={plan} 
+                        onChoosePlan={handleChoosePlan}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -391,8 +317,8 @@ export default function PlansPage() {
           </div>
 
           {/* Mobile swipe indicators */}
-          <div className="md:hidden flex justify-center mt-8">
-            {activePlans.map((_, index) => (
+          <div className="md:hidden flex justify-center mt-0">
+            {plans.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
@@ -408,7 +334,7 @@ export default function PlansPage() {
 
           {/* Desktop indicator dots */}
           {totalPlans > visiblePlans && (
-            <div className="hidden md:flex justify-center space-x-2 mt-8">
+            <div className="hidden md:flex justify-center space-x-2 mt-0">
               {Array.from({ length: maxIndex + 1 }).map((_, index) => (
                 <button
                   key={index}

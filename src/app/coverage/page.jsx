@@ -94,8 +94,8 @@ export default function CoveragePage() {
 
   return (
     <div className="min-h-screen">
-        <div className="mx-5 md:mx-auto mt-30 text-xs md:text-sm text-center">
-            <p>This is not a real implementation of Map. This is just a dummy implementation and will be finalized soon.</p>
+        <div className="mx-5 md:mx-auto mt-30 text-red-500 text-xs md:text-sm text-center">
+            <p>This is not a real implementation for Map and Coverage Check. This is just a dummy implementation and will be finalized soon.</p>
         </div>
       {/* Content */}
       <div className="z-10 relative mx-auto mt-[-100] px-4 sm:px-6 lg:px-8 pt-32 pb-20 max-w-7xl">

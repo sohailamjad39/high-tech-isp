@@ -2,9 +2,11 @@
 
 export default function PlansCard({ plan, onChoosePlan }) {
   const features = plan.features || [];
+  const visibleFeatures = features.slice(0, 5);
+  const remainingFeaturesCount = features.length - visibleFeatures.length;
   
   return (
-    <div className="group relative bg-white/80 shadow-lg hover:shadow-xl backdrop-blur-sm p-6 border border-black/5 hover:border-black/10 rounded-2xl h-full overflow-hidden hover:scale-105 transition-all duration-300">
+    <div className="group relative bg-white/80 shadow-lg hover:shadow-xl backdrop-blur-sm p-6 border border-black/5 hover:border-black/10 rounded-2xl h-full overflow-hidden scale-95 hover:scale-105 transition-all duration-300">
       {/* Decorative corner elements */}
       <div className="top-0 right-0 absolute bg-gradient-to-bl from-blue-100/50 to-transparent opacity-70 rounded-bl-full w-20 h-20"></div>
       <div className="bottom-0 left-0 absolute bg-gradient-to-tr from-blue-100/50 to-transparent opacity-70 rounded-tr-full w-16 h-16"></div>
@@ -57,7 +59,7 @@ export default function PlansCard({ plan, onChoosePlan }) {
         <div className="flex-1 space-y-3 mb-6 overflow-hidden">
           <h4 className="font-semibold text-gray-800">Features:</h4>
           <ul className="space-y-2 pr-1" style={{ maxHeight: '140px' }}>
-            {features.map((feature, index) => (
+            {visibleFeatures.map((feature, index) => (
               <li key={index} className="flex items-center text-gray-700 text-sm">
                 <svg className="flex-shrink-0 mr-2 w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -65,6 +67,16 @@ export default function PlansCard({ plan, onChoosePlan }) {
                 <span className="truncate">{feature}</span>
               </li>
             ))}
+            
+            {/* Show "+X more" if there are additional features */}
+            {remainingFeaturesCount > 0 && (
+              <li className="flex items-center font-medium text-blue-600 text-sm">
+                <svg className="flex-shrink-0 mr-2 w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                <span>+{remainingFeaturesCount} more</span>
+              </li>
+            )}
           </ul>
         </div>
 

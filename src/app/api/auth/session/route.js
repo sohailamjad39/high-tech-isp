@@ -11,15 +11,6 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     
-    console.log('Session API called:', {
-      isAuthenticated: !!session,
-      user: session?.user ? {
-        id: session.user.id,
-        email: session.user.email,
-        role: session.user.role
-      } : null
-    });
-    
     return NextResponse.json({
       user: session?.user || null,
       isAuthenticated: !!session

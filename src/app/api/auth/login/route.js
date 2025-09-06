@@ -1,8 +1,8 @@
 // app/api/auth/login/route.js
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../lib/auth';
-import connectToDatabase from '../../../lib/db';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import {connectToDatabase} from '../../../lib/db';
 import User from '../../../models/User';
 
 export async function POST(request) {
