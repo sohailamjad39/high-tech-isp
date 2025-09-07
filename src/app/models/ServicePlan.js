@@ -1,7 +1,6 @@
 // models/ServicePlan.js
 import mongoose from 'mongoose';
 
-// Service Plan Schema
 const ServicePlanSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -80,13 +79,13 @@ const ServicePlanSchema = new mongoose.Schema({
   },
   tags: [{
     type: String,
-    enum: ['popular', 'best-value', 'premium', 'basic', 'business']
+    enum: ['popular', 'best-value', 'premium', 'basic', 'business', 'enterprise', 'featured']
   }],
   priority: {
     type: Number,
     default: 0,
     min: 0,
-    max: 10
+    max: 11
   },
   trialDays: {
     type: Number,
@@ -115,11 +114,26 @@ const ServicePlanSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Indexes as per blueprint
+// Indexes
 ServicePlanSchema.index({ slug: 1 }, { unique: true });
 ServicePlanSchema.index({ active: 1 });
 
-// Virtual for addons
+// Pre-save middleware
+ServicePlanSchema.pre('save', function(next) {
+  // Fix priority if out of range
+  if (this.priority > 11) this.priority = 11;
+  if (this.priority < 0) this.priority = 0;
+  
+  // Clean up invalid tags
+  const validTags = ['popular', 'best-value', 'premium', 'basic', 'business', 'enterprise', 'featured'];
+  if (this.tags && Array.isArray(this.tags)) {
+    this.tags = this.tags.filter(tag => validTags.includes(tag));
+  }
+  
+  next();
+});
+
+// Virtuals
 ServicePlanSchema.virtual('addons', {
   ref: 'Addon',
   localField: '_id',
@@ -127,7 +141,6 @@ ServicePlanSchema.virtual('addons', {
   justOne: false
 });
 
-// Virtual for orders
 ServicePlanSchema.virtual('orders', {
   ref: 'Order',
   localField: '_id',
@@ -135,7 +148,6 @@ ServicePlanSchema.virtual('orders', {
   justOne: false
 });
 
-// Virtual for subscriptions
 ServicePlanSchema.virtual('subscriptions', {
   ref: 'Subscription',
   localField: '_id',

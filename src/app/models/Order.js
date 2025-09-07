@@ -31,14 +31,8 @@ const OrderSchema = new mongoose.Schema({
     ref: 'CoverageArea'
   },
   installationSlot: {
-    start: {
-      type: Date
-      // Removed required: true
-    },
-    end: {
-      type: Date
-      // Removed required: true
-    }
+    start: { type: Date },
+    end: { type: Date }
   },
   status: {
     type: String,
@@ -84,7 +78,7 @@ const OrderSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Add required indexes
+// Indexes
 OrderSchema.index({ customerId: 1 });
 OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ gatewaySessionId: 1 });

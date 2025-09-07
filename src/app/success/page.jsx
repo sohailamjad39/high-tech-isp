@@ -127,7 +127,7 @@ export default function SuccessPage() {
         
         <div className="space-y-3">
           <Link 
-            href="/dashboard" 
+            href="/dashboard/overview" 
             className="block bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] px-6 py-3 rounded-lg font-medium text-white transition-all duration-200"
           >
             Go to Dashboard
