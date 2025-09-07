@@ -70,11 +70,49 @@ export default function LoginPage() {
       if (result?.error) {
         setErrors({ submit: 'Invalid credentials' });
       } else {
-        // Login successful, redirect to dashboard
-        // Use replace instead of push to prevent going back to login
-        router.replace(callbackUrl);
-        // Refresh to ensure all components update
-        router.refresh();
+        // Login successful, now check user role and redirect accordingly
+        try {
+          // Fetch the session to get user role
+          const sessionResponse = await fetch('/api/auth/session');
+          const sessionData = await sessionResponse.json();
+          
+          let redirectUrl = '/';
+          
+          if (sessionData.user) {
+            const userRole = sessionData.user.role;
+            
+            // Redirect based on user role
+            if (userRole === 'visitor') {
+              redirectUrl = '/plans';
+            } else if (userRole === 'customer') {
+              redirectUrl = '/dashboard/overview';
+            } else if (userRole === 'admin') {
+              redirectUrl = '/admin';
+            } else if (userRole === 'tech') {
+              redirectUrl = '/tech';
+            } else if (userRole === 'support') {
+              redirectUrl = '/support';
+            } else if (userRole === 'ops') {
+              redirectUrl = '/ops';
+            } else {
+              // Default fallback
+              redirectUrl = '/';
+            }
+          }
+          
+          // Use the callbackUrl if it's provided and valid, otherwise use role-based redirect
+          const finalRedirect = callbackUrl && callbackUrl !== '/' ? callbackUrl : redirectUrl;
+          
+          // Redirect to the appropriate dashboard
+          router.replace(finalRedirect);
+          // Refresh to ensure all components update
+          router.refresh();
+        } catch (sessionError) {
+          console.error('Error fetching session:', sessionError);
+          // If we can't get the session, use the callbackUrl or default to home
+          router.replace(callbackUrl || '/');
+          router.refresh();
+        }
       }
     } catch (error) {
       setErrors({ submit: 'Something went wrong. Please try again.' });

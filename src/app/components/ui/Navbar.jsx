@@ -162,6 +162,71 @@ export default function Navbar({ initialSession = null }) {
     }
   };
 
+  // Get user role for menu item logic
+  const userRole = session?.user?.role || 'visitor';
+
+  // Define menu items based on user role
+  const getMenuItems = () => {
+    if (userRole === 'visitor') {
+      return [
+        { href: '/dashboard/profile', label: 'Profile' },
+        { href: '/dashboard/settings', label: 'Settings' },
+      ];
+    } else if (userRole === 'customer') {
+      return [
+        { href: '/dashboard/overview', label: 'Dashboard' },
+        { href: '/dashboard/subscription', label: 'Internet Plan' },
+        { href: '/dashboard/billing', label: 'Bills' },
+        { href: '/dashboard/profile', label: 'Profile' },
+        { href: '/dashboard/settings', label: 'Settings' },
+      ];
+    } else if (userRole === 'admin') {
+      return [
+        { href: '/dashboard/overview', label: 'Dashboard' },
+        { href: '/admin/customers', label: 'Manage Users' },
+        { href: '/admin/plans', label: 'Manage Plans' },
+        { href: '/admin/billing', label: 'Billing History' },
+        { href: '/admin/reports', label: 'Reports' },
+        { href: '/admin/coverage', label: 'Coverage Map' },
+        { href: '/admin/settings', label: 'Settings' },
+      ];
+    } else if (userRole === 'tech') {
+      return [
+        { href: '/dashboard/overview', label: 'Dashboard' },
+        { href: '/tech/jobs', label: 'My Jobs' },
+        { href: '/tech/schedule', label: 'Schedule' },
+        { href: '/tech/profile', label: 'Profile' },
+        { href: '/tech/settings', label: 'Settings' },
+      ];
+    } else if (userRole === 'support') {
+      return [
+        { href: '/dashboard/overview', label: 'Dashboard' },
+        { href: '/support/tickets', label: 'Tickets' },
+        { href: '/support/customers', label: 'Customer Lookup' },
+        { href: '/support/profile', label: 'Profile' },
+        { href: '/support/settings', label: 'Settings' },
+      ];
+    } else if (userRole === 'ops') {
+      return [
+        { href: '/dashboard/overview', label: 'Dashboard' },
+        { href: '/ops/network', label: 'Network' },
+        { href: '/ops/outages', label: 'Outages' },
+        { href: '/ops/installations', label: 'Installations' },
+        { href: '/ops/profile', label: 'Profile' },
+        { href: '/ops/settings', label: 'Settings' },
+      ];
+    } else {
+      // Default for any other role
+      return [
+        { href: '/dashboard/overview', label: 'Dashboard' },
+        { href: '/dashboard/profile', label: 'Profile' },
+        { href: '/dashboard/settings', label: 'Settings' },
+      ];
+    }
+  };
+
+  const menuItems = getMenuItems();
+
   return (
     <>
       <nav className="top-0 right-0 left-0 z-50 fixed bg-transparent shadow-sm backdrop-blur-sm">
@@ -241,41 +306,16 @@ export default function Navbar({ initialSession = null }) {
                   {isDropdownOpen && (
                     <div className="right-0 z-50 absolute bg-white shadow-lg mt-2 border border-gray-200 rounded-md w-48 overflow-hidden">
                       <div className="py-1">
-                        <Link
-                          href="/dashboard"
-                          className="block hover:bg-gray-100 px-4 py-2 text-gray-700 hover:text-gray-900 text-sm transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          Dashboard
-                        </Link>
-                        <Link
-                          href="/dashboard/subscription"
-                          className="block hover:bg-gray-100 px-4 py-2 text-gray-700 hover:text-gray-900 text-sm transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          Internet Plan
-                        </Link>
-                        <Link
-                          href="/dashboard/billing"
-                          className="block hover:bg-gray-100 px-4 py-2 text-gray-700 hover:text-gray-900 text-sm transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          Bills
-                        </Link>
-                        <Link
-                          href="/dashboard/profile"
-                          className="block hover:bg-gray-100 px-4 py-2 text-gray-700 hover:text-gray-900 text-sm transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          Profile
-                        </Link>
-                        <Link
-                          href="/dashboard/settings"
-                          className="block hover:bg-gray-100 px-4 py-2 text-gray-700 hover:text-gray-900 text-sm transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          Settings
-                        </Link>
+                        {menuItems.map((item, index) => (
+                          <Link
+                            key={index}
+                            href={item.href}
+                            className="block hover:bg-gray-100 px-4 py-2 text-gray-700 hover:text-gray-900 text-sm transition-colors"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
                         <hr className="my-1 border-gray-200" />
                         <button
                           onClick={() => setShowLogoutConfirm(true)}
@@ -369,41 +409,16 @@ export default function Navbar({ initialSession = null }) {
               {session ? (
                 <>
                   <div className="my-2 border-gray-200 border-t"></div>
-                  <Link
-                    href="/dashboard"
-                    className="block hover:bg-gray-50 px-3 py-2 rounded-md font-medium text-gray-700 hover:text-blue-600 text-base"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/dashboard/subscription"
-                    className="block hover:bg-gray-50 px-3 py-2 rounded-md font-medium text-gray-700 hover:text-blue-600 text-base"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Internet Plan
-                  </Link>
-                  <Link
-                    href="/dashboard/billing"
-                    className="block hover:bg-gray-50 px-3 py-2 rounded-md font-medium text-gray-700 hover:text-blue-600 text-base"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Bills
-                  </Link>
-                  <Link
-                    href="/dashboard/profile"
-                    className="block hover:bg-gray-50 px-3 py-2 rounded-md font-medium text-gray-700 hover:text-blue-600 text-base"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Profile
-                  </Link>
-                  <Link
-                    href="/dashboard/settings"
-                    className="block hover:bg-gray-50 px-3 py-2 rounded-md font-medium text-gray-700 hover:text-blue-600 text-base"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Settings
-                  </Link>
+                  {menuItems.map((item, index) => (
+                    <Link
+                      key={index}
+                      href={item.href}
+                      className="block hover:bg-gray-50 px-3 py-2 rounded-md font-medium text-gray-700 hover:text-blue-600 text-base"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
                   <button
                     onClick={() => setShowLogoutConfirm(true)}
                     className="block hover:bg-red-50 mt-2 px-3 py-2 rounded-md w-full font-medium text-red-600 hover:text-red-700 text-base text-left"

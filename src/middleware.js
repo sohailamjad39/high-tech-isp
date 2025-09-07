@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
  * Simplified middleware for Turbopack compatibility
  * The error occurs due to module resolution issues in Turbopack
  */
-export function middleware(request) {
+export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for static files and API routes that don't need protection
@@ -25,7 +25,7 @@ export function middleware(request) {
   // Routes that should only be accessible when logged out (guest-only routes)
   const guestOnlyRoutes = [
     "/auth/login",
-    "/auth/register",
+    "/register",
     "/auth/forgot",
     "/auth/reset",
     "/auth/verify",
@@ -70,7 +70,67 @@ export function middleware(request) {
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
-    return NextResponse.next();
+    
+    // User is authenticated, verify role-based access
+    try {
+      // Fetch session data to get user role
+      const sessionResponse = await fetch(new URL('/api/auth/session', request.url), {
+        headers: {
+          'cookie': `${sessionCookie.name}=${sessionCookie.value}`
+        },
+        next: { revalidate: 0 } // Don't cache
+      });
+      
+      const sessionData = await sessionResponse.json();
+      
+      if (sessionResponse.ok && sessionData.user) {
+        const userRole = sessionData.user.role;
+        
+        // Special handling for visitors trying to access dashboard
+        if (userRole === 'visitor' && pathname.startsWith('/dashboard')) {
+          return NextResponse.redirect(new URL('/plans', request.url));
+        }
+        
+        // Role-based access control
+        if (pathname.startsWith('/admin') && userRole !== 'admin') {
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+        
+        if (pathname.startsWith('/tech') && !['tech', 'admin', 'ops'].includes(userRole)) {
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+        
+        if (pathname.startsWith('/dashboard') && !['customer', 'admin', 'support', 'tech', 'ops'].includes(userRole)) {
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+        
+        // Customer-specific routes
+        if (pathname.startsWith('/dashboard/billing') && !['customer', 'admin'].includes(userRole)) {
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+        
+        if (pathname.startsWith('/dashboard/usage') && !['customer', 'admin', 'tech'].includes(userRole)) {
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+        
+        if (pathname.startsWith('/dashboard/appointments') && !['customer', 'admin', 'tech'].includes(userRole)) {
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+        
+        if (pathname.startsWith('/dashboard/tickets') && !['customer', 'admin', 'support'].includes(userRole)) {
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+        
+        // Support staff routes
+        if (pathname.startsWith('/support') && !['support', 'admin'].includes(userRole)) {
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+      }
+    } catch (error) {
+      console.error('Error verifying user role:', error);
+      // If we can't verify the role, deny access
+      return NextResponse.redirect(new URL('/auth/login', request.url));
+    }
   }
 
   // For all other routes, allow access
