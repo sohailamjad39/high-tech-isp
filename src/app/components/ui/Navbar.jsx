@@ -175,7 +175,7 @@ export default function Navbar({ initialSession = null }) {
     } else if (userRole === 'customer') {
       return [
         { href: '/dashboard/overview', label: 'Dashboard' },
-        { href: '/dashboard/subscription', label: 'Internet Plan' },
+        { href: '/dashboard/subscription', label: 'My Internet Plan' },
         { href: '/dashboard/billing', label: 'Bills' },
         { href: '/dashboard/profile', label: 'Profile' },
         { href: '/dashboard/settings', label: 'Settings' },

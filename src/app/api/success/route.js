@@ -111,6 +111,9 @@ export async function GET(request) {
     // Create subscription if we have subscription details
     if (stripeSession.subscription) {
       try {
+        // Add a small delay to ensure Stripe has processed the subscription
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
         const subscription = await stripe.subscriptions.retrieve(stripeSession.subscription);
         
         // Fix: Convert Unix timestamps to valid Date objects

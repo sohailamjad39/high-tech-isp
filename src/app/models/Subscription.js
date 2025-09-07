@@ -14,13 +14,14 @@ const SubscriptionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['trial', 'active', 'past_due', 'paused', 'cancelled'],
+    enum: ['trial', 'active', 'past_due', 'paused', 'cancelled', 'pending_change'],
     default: 'trial',
     required: true
   },
   billingCycle: {
     type: String,
     enum: ['monthly', 'yearly'],
+    default: 'monthly',
     required: true
   },
   currentPeriodStart: {
@@ -31,6 +32,15 @@ const SubscriptionSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
+  trialEnd: {
+    type: Date
+  },
+  pausedUntil: {
+    type: Date
+  },
+  cancelledAt: {
+    type: Date
+  },
   gateway: {
     type: String,
     enum: ['stripe'],
@@ -38,11 +48,11 @@ const SubscriptionSchema = new mongoose.Schema({
   },
   gatewayCustomerId: {
     type: String,
-    required: true
+    index: true
   },
   gatewaySubscriptionId: {
     type: String,
-    required: true
+    index: true
   },
   addons: [{
     addonId: {
@@ -53,7 +63,11 @@ const SubscriptionSchema = new mongoose.Schema({
       type: Number,
       required: true
     }
-  }]
+  }],
+  addressId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Address'
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -63,5 +77,23 @@ const SubscriptionSchema = new mongoose.Schema({
 // Indexes
 SubscriptionSchema.index({ customerId: 1 });
 SubscriptionSchema.index({ status: 1 });
+SubscriptionSchema.index({ gatewayCustomerId: 1 });
+SubscriptionSchema.index({ gatewaySubscriptionId: 1 });
+
+// Virtual for customer
+SubscriptionSchema.virtual('customer', {
+  ref: 'User',
+  localField: 'customerId',
+  foreignField: '_id',
+  justOne: true
+});
+
+// Virtual for plan
+SubscriptionSchema.virtual('plan', {
+  ref: 'ServicePlan',
+  localField: 'planId',
+  foreignField: '_id',
+  justOne: true
+});
 
 export default mongoose.models.Subscription || mongoose.model('Subscription', SubscriptionSchema);
