@@ -11,7 +11,6 @@ import RecentTickets from '@/app/components/dashboard/RecentTickets';
 import NextAppointment from '@/app/components/dashboard/NextAppointment';
 import DashboardSkeleton from '@/app/components/dashboard/DashboardSkeleton';
 
-// Inner component that uses session
 function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -135,14 +134,14 @@ function DashboardContent() {
   }
 
   return (
-    <div className="bg-gray-50 mt-15 min-h-screen">
-      {/* Hide old navbar by not including it */}
+    <div className="bg-gray-50 min-h-screen">
       <DashboardHeader name={session?.user?.name} />
       
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
-        <div className="gap-8 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {/* Left Column */}
-          <div className="space-y-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
+        {/* Mobile: stacked, Desktop: side-by-side */}
+        <div className="md:gap-8 space-y-6 md:space-y-0 md:grid md:grid-cols-12">
+          {/* Left Column - Takes full width on mobile, 5/12 on desktop */}
+          <div className="space-y-6 md:col-span-5">
             <PlanCard 
               plan={dashboardData.subscription?.plan} 
               status={dashboardData.subscription?.status} 
@@ -151,8 +150,8 @@ function DashboardContent() {
             <NextAppointment appointment={dashboardData.appointment} />
           </div>
           
-          {/* Right Column */}
-          <div className="space-y-8 lg:col-span-1 xl:col-span-2">
+          {/* Right Column - Takes full width on mobile, 7/12 on desktop */}
+          <div className="space-y-6 md:col-span-7">
             <RecentInvoices invoices={dashboardData.invoices} />
             <RecentTickets tickets={dashboardData.tickets} />
           </div>
@@ -162,7 +161,6 @@ function DashboardContent() {
   );
 }
 
-// Main component with SessionProvider
 export default function DashboardPage() {
   return (
     <SessionProvider>

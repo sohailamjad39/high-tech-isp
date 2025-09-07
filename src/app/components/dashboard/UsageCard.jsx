@@ -1,20 +1,23 @@
 // components/dashboard/UsageCard.jsx
 export default function UsageCard({ usage }) {
-    // Safely calculate period days and averages
-    const periodStart = usage?.periodStart ? new Date(usage.periodStart) : null;
-    const periodEnd = usage?.periodEnd ? new Date(usage.periodEnd) : null;
-    
-    const periodDays = periodStart && periodEnd ? 
-      Math.max(1, Math.ceil((periodEnd - periodStart) / (1000 * 60 * 60 * 24))) : 1;
-    
-    const dailyDownloadAvg = usage ? (usage.downloadedGB / periodDays).toFixed(1) : '0';
-    const dailyUploadAvg = usage ? (usage.uploadedGB / periodDays).toFixed(1) : '0';
+  // Safely calculate period days and averages
+  const periodStart = usage?.periodStart ? new Date(usage.periodStart) : null;
+  const periodEnd = usage?.periodEnd ? new Date(usage.periodEnd) : null;
   
-    return (
-      <div className="bg-white shadow p-6 rounded-xl">
+  const periodDays = periodStart && periodEnd ? 
+    Math.max(1, Math.ceil((periodEnd - periodStart) / (1000 * 60 * 60 * 24))) : 1;
+  
+  const dailyDownloadAvg = usage ? (usage.downloadedGB / periodDays).toFixed(1) : '0';
+  const dailyUploadAvg = usage ? (usage.uploadedGB / periodDays).toFixed(1) : '0';
+
+  return (
+    <div className="bg-white shadow rounded-xl overflow-hidden">
+      <div className="p-5 border-gray-200 border-b">
         <h3 className="font-medium text-gray-900 text-lg">Data Usage</h3>
-        
-        <div className="space-y-6 mt-6">
+      </div>
+      
+      <div className="p-5">
+        <div className="space-y-5">
           <div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Downloaded</span>
@@ -48,11 +51,12 @@ export default function UsageCard({ usage }) {
           </div>
         </div>
         
-        <div className="mt-6 pt-4 border-t">
-          <p className="text-gray-500 text-sm">
+        <div className="mt-5 pt-4 border-gray-200 border-t">
+          <p className="text-gray-500 text-xs sm:text-sm">
             Your plan includes unlimited data. Usage shown is for informational purposes.
           </p>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
