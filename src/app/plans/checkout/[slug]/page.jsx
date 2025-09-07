@@ -11,6 +11,7 @@ export default function CheckoutPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [authStatus, setAuthStatus] = useState('loading');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Use React.use() to properly unwrap the params promise
   const unwrappedParams = use(params);
@@ -53,23 +54,19 @@ export default function CheckoutPage({ params }) {
       const fetchPlan = async () => {
         try {
           setLoading(true);
-          const response = await fetch(`/api/plans`);
+          const response = await fetch(`/api/plans/checkout/${slug}`);
           
           if (!response.ok) {
-            throw new Error('Failed to fetch plans');
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Failed to fetch plan (Status: ${response.status})`);
           }
           
           const data = await response.json();
           
           if (data.success) {
-            const selectedPlan = data.plans.find(p => p.slug === slug);
-            if (selectedPlan) {
-              setPlan(selectedPlan);
-            } else {
-              setError('Plan not found');
-            }
+            setPlan(data.plan);
           } else {
-            throw new Error(data.message || 'Failed to fetch plans');
+            throw new Error(data.message || 'Failed to fetch plan');
           }
         } catch (err) {
           setError(err.message);
@@ -82,6 +79,42 @@ export default function CheckoutPage({ params }) {
       fetchPlan();
     }
   }, [slug, authStatus]);
+
+  // Handle payment
+  const handlePayment = async () => {
+    if (!plan) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      // Create checkout session
+      const response = await fetch(`/api/plans/checkout/${slug}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.sessionUrl) {
+        // Redirect to Stripe checkout
+        window.location.href = data.sessionUrl;
+      } else {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error('Error creating checkout session:', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   if (authStatus === 'loading' || loading) {
     return (
@@ -267,13 +300,13 @@ export default function CheckoutPage({ params }) {
             <div className="space-y-4">
               <button
                 type="button"
-                className="bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] shadow-md hover:shadow-lg px-6 py-3 rounded-lg w-full font-medium text-white text-sm hover:scale-105 transition-all duration-200 transform"
-                onClick={() => {
-                  // This would integrate with your payment gateway
-                  alert('Payment processing would happen here');
-                }}
+                disabled={isProcessing}
+                className={`bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] shadow-md hover:shadow-lg px-6 py-3 rounded-lg w-full font-medium text-white text-sm transition-all duration-200 transform hover:scale-105 ${
+                  isProcessing ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
+                onClick={handlePayment}
               >
-                Pay ${plan.priceMonthly} and Activate Service
+                {isProcessing ? 'Processing...' : `Pay $${plan.priceMonthly} and Activate Service`}
               </button>
               
               <p className="text-gray-500 text-xs text-center">
