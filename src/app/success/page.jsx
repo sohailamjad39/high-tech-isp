@@ -40,6 +40,14 @@ export default function SuccessPage() {
         }
         
         setOrder(data.order);
+        
+        // Dispatch event to notify navbar of session update
+        window.dispatchEvent(new CustomEvent('session-updated', { 
+          detail: { 
+            action: 'role-updated', 
+            timestamp: Date.now() 
+          } 
+        }));
       } catch (err) {
         setError(err.message);
         console.error('Error processing success:', err);

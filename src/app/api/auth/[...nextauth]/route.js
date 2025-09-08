@@ -73,6 +73,7 @@ export const authOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
         token.role = user.role;
         token.status = user.status;
       }
@@ -80,9 +81,17 @@ export const authOptions = {
     },
     async session({ session, token }) {
       if (token) {
+        // Always fetch the latest user data from database to ensure role is up-to-date
+        await connectToDatabase();
+        const dbUser = await User.findById(token.id);
+        
         session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.status = token.status;
+        session.user.email = token.email;
+        
+        // Use the role from database (not from token) to ensure it's always current
+        session.user.role = dbUser?.role || token.role;
+        session.user.status = dbUser?.status || token.status;
+        session.user.name = dbUser?.name || '';
       }
       return session;
     },

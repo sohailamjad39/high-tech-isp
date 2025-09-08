@@ -93,6 +93,30 @@ export default function Navbar({ initialSession = null }) {
     }
   }, [initialSession]);
 
+  // Handle session update event
+  useEffect(() => {
+    const handleSessionUpdate = async () => {
+      try {
+        const res = await fetch('/api/auth/session');
+        const data = await res.json();
+        if (data.user) {
+          setSession({ user: data.user });
+        } else {
+          setSession(null);
+        }
+      } catch (error) {
+        console.error('Error refreshing session:', error);
+      }
+    };
+
+    // Listen for session update events
+    window.addEventListener('session-updated', handleSessionUpdate);
+    
+    return () => {
+      window.removeEventListener('session-updated', handleSessionUpdate);
+    };
+  }, []);
+
   // Close the mobile menu when the route changes
   useEffect(() => {
     setIsMenuOpen(false);
