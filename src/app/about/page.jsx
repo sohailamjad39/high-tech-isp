@@ -133,31 +133,48 @@ const fetchStats = async () => {
 
 export default function AboutPage() {
   // Use React Query for caching
-  const {  teamMembers, isLoading: loadingTeam } = useQuery({
+  const teamMembersQuery = useQuery({
     queryKey: ['team-members'],
     queryFn: fetchTeamMembers,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     cacheTime: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
-  const {  testimonials, isLoading: loadingTestimonials } = useQuery({
+  const testimonialsQuery = useQuery({
     queryKey: ['testimonials'],
     queryFn: fetchTestimonials,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     cacheTime: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
-  const {  stats, isLoading: loadingStats } = useQuery({
+  const statsQuery = useQuery({
     queryKey: ['stats'],
     queryFn: fetchStats,
     staleTime: 1 * 60 * 60 * 1000, // 1 hour
     cacheTime: 24 * 60 * 60 * 1000, // 1 day
   });
 
-  if (loadingTeam || loadingTestimonials || loadingStats) {
+  if (teamMembersQuery.isLoading || testimonialsQuery.isLoading || statsQuery.isLoading) {
     return (
       <div className="flex justify-center items-center bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen">
         <div className="border-t-2 border-b-2 border-blue-500 rounded-full w-12 h-12 animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (teamMembersQuery.error || testimonialsQuery.error || statsQuery.error) {
+    return (
+      <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-20 max-w-7xl text-center">
+          <h2 className="mb-4 font-bold text-red-600 text-2xl">Error Loading Content</h2>
+          <p className="mb-6 text-gray-600">We're having trouble loading the page content. Please try again later.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg text-white"
+          >
+            Refresh Page
+          </button>
+        </div>
       </div>
     );
   }
@@ -246,10 +263,10 @@ export default function AboutPage() {
           </div>
 
           <div className="gap-8 grid grid-cols-2 md:grid-cols-4 text-center">
-            <StatsCounter value={stats?.customers || 1500} label="Happy Customers" suffix="+" />
-            <StatsCounter value={stats?.fiberMiles || 50} label="Miles of Fiber" suffix="+" />
-            <StatsCounter value={stats?.uptime || 99} label="Network Uptime" suffix="%" />
-            <StatsCounter value={stats?.supportHours || 24} label="Hour Support" suffix="/7" />
+            <StatsCounter value={statsQuery.data?.customers || 1500} label="Happy Customers" suffix="+" />
+            <StatsCounter value={statsQuery.data?.fiberMiles || 50} label="Miles of Fiber" suffix="+" />
+            <StatsCounter value={statsQuery.data?.uptime || 99} label="Network Uptime" suffix="%" />
+            <StatsCounter value={statsQuery.data?.supportHours || 24} label="Hour Support" suffix="/7" />
           </div>
         </div>
       </section>
@@ -263,7 +280,7 @@ export default function AboutPage() {
           </div>
 
           <FeatureGrid columns={3}>
-            {teamMembers?.map((member, index) => (
+            {teamMembersQuery.data?.map((member, index) => (
               <TeamMemberCard key={index} {...member} />
             ))}
           </FeatureGrid>
@@ -279,7 +296,7 @@ export default function AboutPage() {
           </div>
 
           <FeatureGrid columns={3}>
-            {testimonials?.map((testimonial, index) => (
+            {testimonialsQuery.data?.map((testimonial, index) => (
               <TestimonialCard key={index} {...testimonial} />
             ))}
           </FeatureGrid>
