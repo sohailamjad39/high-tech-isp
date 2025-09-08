@@ -7,6 +7,7 @@ import TestimonialCard from '../components/ui/TestimonialCard';
 import StatsCounter from '../components/ui/StatsCounter';
 import TeamMemberCard from '../components/ui/TeamMemberCard';
 import CTASection from '../components/ui/CTASection';
+import { useQuery } from '@tanstack/react-query';
 
 // Icons
 function RocketIcon() {
@@ -33,9 +34,11 @@ function UsersIcon() {
   );
 }
 
-export default function AboutPage() {
-  // Team members data
-  const teamMembers = [
+// Fetch team members data
+const fetchTeamMembers = async () => {
+  // In production, this would be an API call
+  // For now, return static data
+  return [
     {
       name: "Sarah Johnson",
       role: "CEO & Founder",
@@ -88,9 +91,13 @@ export default function AboutPage() {
       ]
     }
   ];
+};
 
-  // Testimonials
-  const testimonials = [
+// Fetch testimonials data
+const fetchTestimonials = async () => {
+  // In production, this would be an API call
+  // For now, return static data
+  return [
     {
       name: "Jennifer Wilson",
       role: "Home User",
@@ -110,6 +117,50 @@ export default function AboutPage() {
       avatar: "/about/user.svg",
     }
   ];
+};
+
+// Fetch stats data
+const fetchStats = async () => {
+  // In production, this would be an API call
+  // For now, return static data
+  return {
+    customers: 1500,
+    fiberMiles: 50,
+    uptime: 99,
+    supportHours: 24
+  };
+};
+
+export default function AboutPage() {
+  // Use React Query for caching
+  const {  teamMembers, isLoading: loadingTeam } = useQuery({
+    queryKey: ['team-members'],
+    queryFn: fetchTeamMembers,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    cacheTime: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  const {  testimonials, isLoading: loadingTestimonials } = useQuery({
+    queryKey: ['testimonials'],
+    queryFn: fetchTestimonials,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    cacheTime: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  const {  stats, isLoading: loadingStats } = useQuery({
+    queryKey: ['stats'],
+    queryFn: fetchStats,
+    staleTime: 1 * 60 * 60 * 1000, // 1 hour
+    cacheTime: 24 * 60 * 60 * 1000, // 1 day
+  });
+
+  if (loadingTeam || loadingTestimonials || loadingStats) {
+    return (
+      <div className="flex justify-center items-center bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen">
+        <div className="border-t-2 border-b-2 border-blue-500 rounded-full w-12 h-12 animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen">
@@ -151,6 +202,8 @@ export default function AboutPage() {
                 alt="Our network infrastructure"
                 fill
                 className="opacity-85 object-cover"
+                priority
+                quality={80}
               />
             </div>
           </div>
@@ -193,10 +246,10 @@ export default function AboutPage() {
           </div>
 
           <div className="gap-8 grid grid-cols-2 md:grid-cols-4 text-center">
-            <StatsCounter value={1500} label="Happy Customers" suffix="+" />
-            <StatsCounter value={50} label="Miles of Fiber" suffix="+" />
-            <StatsCounter value={99} label="Network Uptime" suffix="%" />
-            <StatsCounter value={24} label="Hour Support" suffix="/7" />
+            <StatsCounter value={stats?.customers || 1500} label="Happy Customers" suffix="+" />
+            <StatsCounter value={stats?.fiberMiles || 50} label="Miles of Fiber" suffix="+" />
+            <StatsCounter value={stats?.uptime || 99} label="Network Uptime" suffix="%" />
+            <StatsCounter value={stats?.supportHours || 24} label="Hour Support" suffix="/7" />
           </div>
         </div>
       </section>
@@ -210,7 +263,7 @@ export default function AboutPage() {
           </div>
 
           <FeatureGrid columns={3}>
-            {teamMembers.map((member, index) => (
+            {teamMembers?.map((member, index) => (
               <TeamMemberCard key={index} {...member} />
             ))}
           </FeatureGrid>
@@ -226,7 +279,7 @@ export default function AboutPage() {
           </div>
 
           <FeatureGrid columns={3}>
-            {testimonials.map((testimonial, index) => (
+            {testimonials?.map((testimonial, index) => (
               <TestimonialCard key={index} {...testimonial} />
             ))}
           </FeatureGrid>

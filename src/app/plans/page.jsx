@@ -3,12 +3,38 @@
 import PlansCard from '../components/ui/PlansCard';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+
+// Fetch plans from API
+const fetchPlans = async () => {
+  const response = await fetch('/api/plans');
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch plans');
+  }
+  
+  const data = await response.json();
+  
+  if (data.success) {
+    // Add timestamp for background refresh
+    return {
+      plans: data.plans,
+      fetchedAt: Date.now()
+    };
+  } else {
+    throw new Error(data.message || 'Failed to fetch plans');
+  }
+};
+
+// Fetch session from API
+const fetchSession = async () => {
+  const response = await fetch('/api/auth/session');
+  const data = await response.json();
+  
+  return data.user ? data.user : null;
+};
 
 export default function PlansPage() {
-  const [plans, setPlans] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [session, setSession] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visiblePlans, setVisiblePlans] = useState(1);
@@ -18,54 +44,31 @@ export default function PlansPage() {
   
   const router = useRouter();
 
-  // Fetch session from API instead of using useSession
-  useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const response = await fetch('/api/auth/session');
-        const data = await response.json();
-        
-        if (data.user) {
-          setSession(data.user);
-        } else {
-          setSession(null);
-        }
-      } catch (err) {
-        setSession(null);
-      }
-    };
+  // Use React Query for caching
+  const { 
+    data: plansData, 
+    isLoading, 
+    error,
+    isFetching,
+    refetch 
+  } = useQuery({
+    queryKey: ['plans'],
+    queryFn: fetchPlans,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    cacheTime: 60 * 60 * 1000, // 1 hour
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    retry: 1
+  });
 
-    fetchSession();
-  }, []);
-
-  // Fetch plans from API
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/plans');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch plans');
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          setPlans(data.plans);
-        } else {
-          throw new Error(data.message || 'Failed to fetch plans');
-        }
-      } catch (err) {
-        setError(err.message);
-        console.error('Error fetching plans:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlans();
-  }, []);
+  // Fetch session
+  const { data: session } = useQuery({
+    queryKey: ['session'],
+    queryFn: fetchSession,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
+    refetchInterval: 300000, // Every 5 minutes
+  });
 
   // Update visible plans based on screen size
   useEffect(() => {
@@ -85,7 +88,7 @@ export default function PlansPage() {
   }, []);
 
   // Calculate max index based on visible plans
-  const totalPlans = plans.length;
+  const totalPlans = plansData?.plans?.length || 0;
   const maxIndex = Math.max(0, totalPlans - visiblePlans);
 
   // Navigate to previous plan
@@ -127,7 +130,27 @@ export default function PlansPage() {
     router.push(`/plans/checkout/${plan.slug}`);
   };
 
-  if (loading) {
+  // Handle visibility change for background refresh
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isFetching && plansData) {
+        // Only refetch if data is stale
+        const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
+        const dataAge = Date.now() - (plansData.fetchedAt || 0);
+        
+        if (dataAge > 10 * 60 * 1000) {
+          refetch();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isFetching, plansData, refetch]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen">
         <div className="z-10 relative mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 max-w-7xl">
@@ -169,9 +192,9 @@ export default function PlansPage() {
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
           <h2 className="font-bold text-red-600 text-2xl">Error Loading Plans</h2>
-          <p className="mt-2 text-gray-600">{error}</p>
+          <p className="mt-2 text-gray-600">{error.message}</p>
           <button 
-            onClick={() => window.location.reload()}
+            onClick={() => refetch()}
             className="bg-blue-600 hover:bg-blue-700 mt-4 px-4 py-2 rounded-lg text-white"
           >
             Try Again
@@ -227,7 +250,7 @@ export default function PlansPage() {
                 className="flex transition-transform duration-500 ease-out"
                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
               >
-                {plans.map((plan) => (
+                {plansData?.plans?.map((plan) => (
                   <div key={plan._id} className="flex-shrink-0 px-4 w-full">
                     <PlansCard 
                       plan={plan} 
@@ -290,7 +313,7 @@ export default function PlansPage() {
                   className="flex transition-transform duration-500 ease-out"
                   style={{ transform: `translateX(-${(currentIndex * 100) / visiblePlans}%)` }}
                 >
-                  {plans.map((plan) => (
+                  {plansData?.plans?.map((plan) => (
                     <div key={plan._id} className="flex-shrink-0 px-4 w-full md:w-1/2 lg:w-1/3">
                       <PlansCard 
                         plan={plan} 
@@ -318,7 +341,7 @@ export default function PlansPage() {
 
           {/* Mobile swipe indicators */}
           <div className="md:hidden flex justify-center mt-0">
-            {plans.map((_, index) => (
+            {plansData?.plans?.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}

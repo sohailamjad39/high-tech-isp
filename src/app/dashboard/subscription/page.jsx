@@ -1,6 +1,7 @@
 // app/dashboard/subscription/page.jsx
 "use client"
-import { use, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 // Status badge component
 function StatusBadge({ status }) {
@@ -228,41 +229,66 @@ function ActionButtons({ subscription }) {
   );
 }
 
-// Main Subscription Page
-export default function SubscriptionPage({ params }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+// Fetch dashboard data function
+const fetchDashboardData = async () => {
+  const response = await fetch('/api/dashboard');
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch dashboard data');
+  }
+  
+  const result = await response.json();
+  
+  if (result.success) {
+    return {
+      ...result,
+      fetchedAt: Date.now() // Add timestamp for background refresh
+    };
+  } else {
+    throw new Error(result.message || 'Failed to fetch dashboard data');
+  }
+};
 
+// Main Subscription Page
+export default function SubscriptionPage() {
+  // Use React Query for caching
+  const { 
+    data, 
+    isLoading, 
+    error,
+    isFetching,
+    refetch 
+  } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: fetchDashboardData,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    retry: 1
+  });
+
+  // Handle visibility change for background refresh
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/dashboard');
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isFetching) {
+        // Only refetch if data is stale
+        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+        const dataAge = Date.now() - (data?.fetchedAt || 0);
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
+        if (dataAge > 5 * 60 * 1000) {
+          refetch();
         }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          setData(result);
-        } else {
-          throw new Error(result.message || 'Failed to fetch dashboard data');
-        }
-      } catch (err) {
-        setError(err.message);
-        console.error('Error fetching dashboard data:', err);
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchDashboardData();
-  }, []);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isFetching, data, refetch]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="bg-gray-50 min-h-screen">
         <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
@@ -286,9 +312,9 @@ export default function SubscriptionPage({ params }) {
         <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
           <div className="bg-red-50 p-6 border border-red-200 rounded-lg">
             <h3 className="font-medium text-red-800">Error</h3>
-            <p className="mt-2 text-red-700">{error}</p>
+            <p className="mt-2 text-red-700">{error.message}</p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => refetch()}
               className="bg-red-600 hover:bg-red-700 mt-4 px-4 py-2 rounded-lg text-white"
             >
               Try Again

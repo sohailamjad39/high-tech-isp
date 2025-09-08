@@ -12,6 +12,8 @@ export default function TestimonialCard({ name, role, content, avatar }) {
             width={48}
             height={48}
             className="object-cover"
+            quality={75}
+            priority={false}
           />
         </div>
         <div>

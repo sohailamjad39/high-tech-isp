@@ -3,6 +3,7 @@
 import { SessionProvider, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import DashboardHeader from '@/app/components/dashboard/DashboardHeader';
 import PlanCard from '@/app/components/dashboard/PlanCard';
 import UsageCard from '@/app/components/dashboard/UsageCard';
@@ -11,112 +12,118 @@ import RecentTickets from '@/app/components/dashboard/RecentTickets';
 import NextAppointment from '@/app/components/dashboard/NextAppointment';
 import DashboardSkeleton from '@/app/components/dashboard/DashboardSkeleton';
 
+// Fetch dashboard data function
+const fetchDashboardData = async () => {
+  const response = await fetch('/api/dashboard');
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch dashboard data');
+  }
+  
+  const data = await response.json();
+  
+  // Add fallback data if API returns empty
+  const defaultData = {
+    success: true,
+    subscription: {
+      status: 'active',
+      plan: {
+        name: 'Starter Fiber',
+        speedMbps: { download: 100, upload: 50 },
+        priceMonthly: 49.99,
+        features: [
+          '100 Mbps Download',
+          '50 Mbps Upload', 
+          'Unlimited Data',
+          'Free Router',
+          '24/7 Support'
+        ]
+      }
+    },
+    invoices: [
+      {
+        id: '1',
+        invoiceNumber: 'INV-001',
+        issuedAt: new Date().toISOString(),
+        dueAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        total: 49.99,
+        status: 'paid'
+      }
+    ],
+    tickets: [
+      {
+        id: '1',
+        code: 'TICK-001',
+        subject: 'Service Installation',
+        status: 'pending',
+        priority: 'medium',
+        createdAt: new Date().toISOString()
+      }
+    ],
+    appointment: {
+      id: '1',
+      type: 'Installation',
+      status: 'scheduled',
+      scheduledStart: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      scheduledEnd: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
+      technicianName: 'John Smith'
+    },
+    usage: {
+      downloadedGB: 150.5,
+      uploadedGB: 45.2,
+      periodStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      periodEnd: new Date().toISOString()
+    }
+  };
+  
+  return data.success ? data : defaultData;
+};
+
 function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [dashboardData, setDashboardData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  
+  // Use React Query for caching
+  const { data: dashboardData, isLoading, error, isFetching } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: fetchDashboardData,
+    enabled: status === 'authenticated' && session?.user?.role === 'customer',
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    refetchOnWindowFocus: false, // We'll handle this manually
+    refetchOnReconnect: true,
+    retry: 1
+  });
 
+  // Handle visibility change for background refresh
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/login');
-      return;
-    }
-
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/dashboard');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isFetching && status === 'authenticated') {
+        // Only refetch if data is stale
+        const queryClient = window.queryClient;
+        if (queryClient) {
+          const queryState = queryClient.getQueryState(['dashboard']);
+          if (queryState && (Date.now() - queryState.dataUpdatedAt) > 5 * 60 * 1000) {
+            queryClient.invalidateQueries(['dashboard']);
+          }
         }
-        
-        const data = await response.json();
-        
-        // Add fallback data if API returns empty
-        const defaultData = {
-          success: true,
-          subscription: {
-            status: 'active',
-            plan: {
-              name: 'Starter Fiber',
-              speedMbps: { download: 100, upload: 50 },
-              priceMonthly: 49.99,
-              features: [
-                '100 Mbps Download',
-                '50 Mbps Upload', 
-                'Unlimited Data',
-                'Free Router',
-                '24/7 Support'
-              ]
-            }
-          },
-          invoices: [
-            {
-              id: '1',
-              invoiceNumber: 'INV-001',
-              issuedAt: new Date().toISOString(),
-              dueAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              total: 49.99,
-              status: 'paid'
-            }
-          ],
-          tickets: [
-            {
-              id: '1',
-              code: 'TICK-001',
-              subject: 'Service Installation',
-              status: 'pending',
-              priority: 'medium',
-              createdAt: new Date().toISOString()
-            }
-          ],
-          appointment: {
-            id: '1',
-            type: 'Installation',
-            status: 'scheduled',
-            scheduledStart: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            scheduledEnd: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
-            technicianName: 'John Smith'
-          },
-          usage: {
-            downloadedGB: 150.5,
-            uploadedGB: 45.2,
-            periodStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            periodEnd: new Date().toISOString()
-          }
-        };
-        
-        setDashboardData(data.success ? data : defaultData);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        // Use fallback data on error
-        setDashboardData({
-          success: true,
-          subscription: null,
-          invoices: [],
-          tickets: [],
-          appointment: null,
-          usage: {
-            downloadedGB: 0,
-            uploadedGB: 0,
-            periodStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            periodEnd: new Date().toISOString()
-          }
-        });
-      } finally {
-        setLoading(false);
       }
     };
 
-    if (status === 'authenticated' && session?.user?.role === 'customer') {
-      fetchDashboardData();
-    }
-  }, [status, session, router]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isFetching, status]);
 
-  if (loading) {
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/login');
+    }
+  }, [status, router]);
+
+  if (status === 'loading' || isLoading) {
     return <DashboardSkeleton />;
   }
 

@@ -1,5 +1,6 @@
 // app/dashboard/billing/page.jsx
 "use client"
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 // Status badge component
@@ -251,40 +252,63 @@ function SummaryCard({ bills }) {
   );
 }
 
+// Fetch billing data function
+const fetchBillingData = async ({ page = 1, limit = 10 }) => {
+  const response = await fetch(`/api/dashboard/billing?page=${page}&limit=${limit}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch billing data');
+  }
+  
+  const result = await response.json();
+  
+  if (result.success) {
+    return result;
+  } else {
+    throw new Error(result.message || 'Failed to fetch billing data');
+  }
+};
+
 // Main Bills Page
 export default function BillsPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Use React Query for caching
+  const { 
+    data, 
+    isLoading, 
+    error,
+    isFetching,
+    refetch 
+  } = useQuery({
+    queryKey: ['billing', currentPage],
+    queryFn: () => fetchBillingData({ page: currentPage, limit: 10 }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    retry: 1
+  });
 
+  // Handle visibility change for background refresh
   useEffect(() => {
-    const fetchBillingData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/dashboard/billing?page=${currentPage}&limit=10`);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isFetching) {
+        // Only refetch if data is stale
+        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+        const dataAge = Date.now() - (data?.fetchedAt || 0);
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch billing data');
+        if (dataAge > 5 * 60 * 1000) {
+          refetch();
         }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          setData(result);
-        } else {
-          throw new Error(result.message || 'Failed to fetch billing data');
-        }
-      } catch (err) {
-        setError(err.message);
-        console.error('Error fetching billing data:', err);
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchBillingData();
-  }, [currentPage]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isFetching, data, refetch]);
 
   const handlePageChange = (page) => {
     if (page >= 1 && (!data?.pagination || page <= data.pagination.totalPages)) {
@@ -298,9 +322,9 @@ export default function BillsPage() {
         <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
           <div className="bg-red-50 p-6 border border-red-200 rounded-lg">
             <h3 className="font-medium text-red-800">Error</h3>
-            <p className="mt-2 text-red-700">{error}</p>
+            <p className="mt-2 text-red-700">{error.message}</p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => refetch()}
               className="bg-red-600 hover:bg-red-700 mt-4 px-4 py-2 rounded-lg text-white"
             >
               Try Again
@@ -322,7 +346,7 @@ export default function BillsPage() {
         <div className="space-y-6">
           <SummaryCard bills={data?.bills} />
           
-          <BillingTable bills={data?.bills} loading={loading} />
+          <BillingTable bills={data?.bills} loading={isLoading} />
           
           {data?.pagination && (
             <Pagination 

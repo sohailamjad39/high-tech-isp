@@ -4,6 +4,7 @@ import Navbar from "./components/ui/Navbar";
 import { connectToDatabase } from "./lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/route";
+import { Providers } from "@/app/components/providers/QueryClientProvider";
 
 const lexend = Lexend({ subsets: ["latin"], variable: "--font-lexend" });
 
@@ -19,8 +20,10 @@ async function RootLayout({ children }) {
   return (
     <html lang="en" className={lexend.variable}>
       <body className="font-sans">
-        <Navbar initialSession={session}/>
-        {children}
+        <Providers>
+          <Navbar initialSession={session} />
+          {children}
+        </Providers>
       </body>
     </html>
   );

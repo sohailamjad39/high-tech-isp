@@ -21,7 +21,7 @@ export default function PlanCard({ plan, status }) {
   return (
     <div className="bg-white shadow rounded-xl overflow-hidden">
       <div className="p-5 border-gray-200 border-b">
-        <div className="flex sm:flex-row flex-col justify-between items-start sm:items-center space-y-2 sm:space-y-0">
+        <div className="flex flex-row justify-between items-start sm:items-center">
           <h3 className="font-medium text-gray-900 text-lg">Service Plan</h3>
           <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${
             status === 'active' ? 'bg-green-100 text-green-800' : 

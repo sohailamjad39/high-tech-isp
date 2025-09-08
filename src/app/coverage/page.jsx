@@ -5,66 +5,85 @@ import AddressSearchInput from "../components/maps/AddressSearchInput";
 import CoverageLegend from "../components/maps/CoverageLegend";
 import Alert from "../components/ui/Alert";
 import { useState, useRef } from "react";
+import { useQuery } from '@tanstack/react-query';
 
-// Mock coverage areas for demonstration
-const mockCoverageAreas = [
-  {
-    name: "Downtown Fiber Zone",
-    coverageType: "fiber",
-    status: "active",
-    color: "#4285F4",
-    geometry: {
-      type: "Polygon",
-      coordinates: [
-        [
-          [-74.008, 40.71],
-          [-74.004, 40.71],
-          [-74.004, 40.714],
-          [-74.008, 40.714],
-          [-74.008, 40.71],
+// Fetch coverage areas from API
+const fetchCoverageAreas = async () => {
+  // In production, this would be an API call
+  // For now, return mock data
+  return [
+    {
+      name: "Downtown Fiber Zone",
+      coverageType: "fiber",
+      status: "active",
+      color: "#4285F4",
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [-74.008, 40.71],
+            [-74.004, 40.71],
+            [-74.004, 40.714],
+            [-74.008, 40.714],
+            [-74.008, 40.71],
+          ],
         ],
-      ],
+      },
     },
-  },
-  {
-    name: "Uptown Wireless Zone",
-    coverageType: "wireless",
-    status: "active",
-    color: "#34A853",
-    geometry: {
-      type: "Polygon",
-      coordinates: [
-        [
-          [-74.01, 40.72],
-          [-74.002, 40.72],
-          [-74.002, 40.728],
-          [-74.01, 40.728],
-          [-74.01, 40.72],
+    {
+      name: "Uptown Wireless Zone",
+      coverageType: "wireless",
+      status: "active",
+      color: "#34A853",
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [-74.01, 40.72],
+            [-74.002, 40.72],
+            [-74.002, 40.728],
+            [-74.01, 40.728],
+            [-74.01, 40.72],
+          ],
         ],
-      ],
+      },
     },
-  },
-];
+  ];
+};
 
-// Mock offices for demonstration
-const mockOffices = [
-  {
-    name: "Main Office",
-    phone: "(555) 123-4567",
-    email: "info@high-tech-isp.com",
-    location: {
-      coordinates: [-74.006, 40.7128],
+// Fetch offices from API
+const fetchOffices = async () => {
+  // In production, this would be an API call
+  // For now, return mock data
+  return [
+    {
+      name: "Main Office",
+      phone: "(555) 123-4567",
+      email: "info@high-tech-isp.com",
+      location: {
+        coordinates: [-74.006, 40.7128],
+      },
     },
-  },
-  {
-    name: "Downtown Branch",
-    phone: "(555) 987-6543",
-    email: "downtown@high-tech-isp.com",
-    location: {
-      coordinates: [-74.005, 40.711],
+    {
+      name: "Downtown Branch",
+      phone: "(555) 987-6543",
+      email: "downtown@high-tech-isp.com",
+      location: {
+        coordinates: [-74.005, 40.711],
+      },
     },
-  },
-];
+  ];
+};
+
+// Check if address is in coverage
+const checkCoverage = async ({ lat, lng }) => {
+  // In production, this would be an API call to /api/coverage/check
+  // For now, return mock data
+  return {
+    inside: Math.random() > 0.3, // 70% chance of being in coverage
+    address: "123 Main Street, New York, NY"
+  };
+};
 
 export default function CoveragePage() {
   const [userLocation, setUserLocation] = useState(null);
@@ -73,24 +92,49 @@ export default function CoveragePage() {
   const [mapZoom, setMapZoom] = useState(12);
   const mapRef = useRef(null);
 
-  const handleAddressSelect = (locationData) => {
+  // Use React Query for caching
+  const { data: coverageAreas, isLoading: loadingCoverage } = useQuery({
+    queryKey: ['coverage-areas'],
+    queryFn: fetchCoverageAreas,
+    staleTime: 60 * 60 * 1000, // 1 hour
+    cacheTime: 24 * 60 * 60 * 1000, // 24 hours
+  });
+
+  const { data: offices, isLoading: loadingOffices } = useQuery({
+    queryKey: ['offices'],
+    queryFn: fetchOffices,
+    staleTime: 60 * 60 * 1000, // 1 hour
+    cacheTime: 24 * 60 * 60 * 1000, // 24 hours
+  });
+
+  const handleAddressSelect = async (locationData) => {
     setUserLocation(locationData);
     setMapCenter({ lat: locationData.lat, lng: locationData.lng });
     setMapZoom(14);
 
-    // Check if location is in coverage area
-    const isInCoverage = checkIfInCoverage(locationData.lat, locationData.lng);
-    setResult({
-      inside: isInCoverage,
-      address: locationData.address,
-    });
+    try {
+      // Check if location is in coverage area
+      const result = await checkCoverage({ lat: locationData.lat, lng: locationData.lng });
+      setResult({
+        inside: result.inside,
+        address: result.address,
+      });
+    } catch (error) {
+      console.error('Error checking coverage:', error);
+      setResult({
+        inside: false,
+        address: locationData.address,
+      });
+    }
   };
 
-  const checkIfInCoverage = (lat, lng) => {
-    // Simple point-in-polygon check for demonstration
-    // In production, you would use a more robust algorithm
-    return Math.random() > 0.3; // 70% chance of being in coverage
-  };
+  if (loadingCoverage || loadingOffices) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="border-t-2 border-b-2 border-blue-500 rounded-full w-12 h-12 animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -137,8 +181,8 @@ export default function CoveragePage() {
 
               <div className="relative mt-8 border border-gray-200 rounded-xl h-96 md:h-[500px] overflow-hidden">
                 <OSMMap
-                  coverageAreas={mockCoverageAreas}
-                  offices={mockOffices}
+                  coverageAreas={coverageAreas}
+                  offices={offices}
                   userLocation={userLocation}
                   center={mapCenter}
                   zoom={mapZoom}

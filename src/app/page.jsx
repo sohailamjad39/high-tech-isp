@@ -1,57 +1,71 @@
-// components/ui/LandingPage.jsx
+// app/page.jsx
 "use client"
 import Image from "next/image";
 import Link from "next/link";
 import WhyChooseUsCard from "./components/ui/WhyChooseUsCard";
+import { useQuery } from '@tanstack/react-query';
 
-export default function LandingPage() {
-  // Card data
-  const whyChooseUsCards = [
+// Fetch hero image metadata
+const fetchHeroImage = async () => {
+  // In production, you might fetch image metadata from an API
+  // For now, return static data
+  return {
+    src: "/city.png",
+    alt: "City skyline with fiber optic cables",
+    width: 1920,
+    height: 1080
+  };
+};
+
+// Fetch why choose us data
+const fetchWhyChooseUsData = async () => {
+  return [
     {
-      icon: (
-        <img
-          src="/why-us-card-icons/1.svg"
-          className="w-full h-full"
-          alt="Blazing Fast Speeds"
-        />
-      ),
+      icon: '/why-us-card-icons/1.svg',
       heading: "Blazing Fast Speeds",
       subheading: "Fiber-powered internet up to 1Gbps",
     },
     {
-      icon: (
-        <img
-          src="/why-us-card-icons/2.svg"
-          className="w-full h-full"
-          alt="Reliable & Secure"
-        />
-      ),
+      icon: '/why-us-card-icons/2.svg',
       heading: "Reliable & Secure",
       subheading: "99.9% uptime with advanced protection",
     },
     {
-      icon: (
-        <img
-          src="/why-us-card-icons/3.svg"
-          className="w-full h-full"
-          alt="24/7 Support"
-        />
-      ),
+      icon: '/why-us-card-icons/3.svg',
       heading: "24/7 Support",
       subheading: "Always here when you need us",
     },
     {
-      icon: (
-        <img
-          src="/why-us-card-icons/4.svg"
-          className="w-full h-full"
-          alt="Affordable Packages"
-        />
-      ),
+      icon: '/why-us-card-icons/4.svg',
       heading: "Affordable Packages",
       subheading: "Plans for every budget",
     },
   ];
+};
+
+export default function LandingPage() {
+  // Use React Query for caching
+  const { data: heroImage } = useQuery({
+    queryKey: ['hero-image'],
+    queryFn: fetchHeroImage,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    cacheTime: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  const { data: whyChooseUsCards } = useQuery({
+    queryKey: ['why-choose-us'],
+    queryFn: fetchWhyChooseUsData,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    cacheTime: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  if (!whyChooseUsCards) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="border-t-2 border-b-2 border-blue-500 rounded-full w-12 h-12 animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -62,15 +76,17 @@ export default function LandingPage() {
           {/* Background image container with fade effects */}
           <div className="relative mt-45 w-full h-[70%] overflow-hidden">
             {/* Background Image */}
-            <Image
-              src="/city.png"
-              alt="City skyline with fiber optic cables"
-              fill
-              sizes="100vw"
-              style={{ objectFit: "cover", opacity: '70%' }}
-              priority
-              quality={80}
-            />
+            {heroImage && (
+              <Image
+                src={heroImage.src}
+                alt={heroImage.alt}
+                fill
+                sizes="100vw"
+                style={{ objectFit: "cover", opacity: '70%' }}
+                priority
+                quality={80}
+              />
+            )}
 
             {/* Fade Top (0 -> 100% opacity) */}
             <div className="top-0 left-0 absolute bg-gradient-to-b from-white to-transparent w-full h-[25%]"></div>
@@ -78,7 +94,6 @@ export default function LandingPage() {
             {/* Fade Bottom (100% -> 0 opacity) */}
             <div className="bottom-0 left-0 absolute bg-gradient-to-t from-white to-transparent w-full h-[25%]"></div>
           </div>
-
         </div>
 
         {/* Content */}
@@ -121,7 +136,7 @@ export default function LandingPage() {
           {whyChooseUsCards.map((card, index) => (
             <WhyChooseUsCard
               key={index}
-              icon={card.icon}
+              icon={<img src={card.icon} className="w-full h-full" alt={card.heading} />}
               heading={card.heading}
               subheading={card.subheading}
             />

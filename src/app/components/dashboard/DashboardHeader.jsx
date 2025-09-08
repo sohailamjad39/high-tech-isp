@@ -8,14 +8,14 @@ export default function DashboardHeader({ name }) {
             <h1 className="font-bold text-gray-900 text-xl sm:text-2xl leading-tight tracking-tight">
               Welcome back, {name?.split(' ')[0] || 'Customer'}!
             </h1>
-            <p className="mt-1 text-gray-500 text-sm">
+            <p className="mt-1 text-gray-500 text-xs md:text-sm">
               Here's what's happening with your service today.
             </p>
           </div>
           <div className="flex justify-end items-center w-full sm:w-auto">
             <div className="flex items-center space-x-2 bg-green-100 px-3 py-1.5 rounded-full">
               <div className="bg-green-500 rounded-full w-2 h-2"></div>
-              <span className="font-medium text-green-800 text-sm whitespace-nowrap">Service Active</span>
+              <span className="font-medium text-green-800 text-xs md:text-sm whitespace-nowrap">Service Active</span>
             </div>
           </div>
         </div>

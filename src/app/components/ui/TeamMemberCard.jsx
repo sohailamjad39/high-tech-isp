@@ -10,6 +10,8 @@ export default function TeamMemberCard({ name, role, bio, avatar, socialLinks })
           alt={name}
           fill
           className="object-fit"
+          quality={75}
+          priority={false}
         />
       </div>
       <div className="p-6">
