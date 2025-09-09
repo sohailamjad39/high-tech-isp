@@ -26,8 +26,6 @@ export async function connectToDatabase() {
     // Set mongoose options
     const mongooseOptions = {
       dbName: process.env.DB_NAME || 'isp-platform',
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     };

@@ -193,7 +193,7 @@ export default function Navbar({ initialSession = null }) {
   const getMenuItems = () => {
     if (userRole === 'visitor') {
       return [
-        { href: '/dashboard/profile', label: 'Profile' },
+        { href: '/profile', label: 'Profile' },
         { href: '/dashboard/settings', label: 'Settings' },
       ];
     } else if (userRole === 'customer') {
@@ -201,7 +201,7 @@ export default function Navbar({ initialSession = null }) {
         { href: '/dashboard/overview', label: 'Dashboard' },
         { href: '/dashboard/subscription', label: 'My Internet Plan' },
         { href: '/dashboard/billing', label: 'Bills' },
-        { href: '/dashboard/profile', label: 'Profile' },
+        { href: '/profile', label: 'Profile' },
         { href: '/dashboard/settings', label: 'Settings' },
       ];
     } else if (userRole === 'admin') {
@@ -243,7 +243,7 @@ export default function Navbar({ initialSession = null }) {
       // Default for any other role
       return [
         { href: '/dashboard/overview', label: 'Dashboard' },
-        { href: '/dashboard/profile', label: 'Profile' },
+        { href: '/profile', label: 'Profile' },
         { href: '/dashboard/settings', label: 'Settings' },
       ];
     }
