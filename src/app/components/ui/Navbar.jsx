@@ -44,14 +44,14 @@ function ConfirmationDialog({ isOpen, title, message, onConfirm, onCancel }) {
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg font-medium text-gray-700 transition-colors"
+            className="flex-1 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg font-medium text-gray-700 transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="flex-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium text-white transition-colors"
+            className="flex-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium text-white transition-colors cursor-pointer"
           >
             Yes, Logout
           </button>
@@ -343,7 +343,7 @@ export default function Navbar({ initialSession = null }) {
                         <hr className="my-1 border-gray-200" />
                         <button
                           onClick={() => setShowLogoutConfirm(true)}
-                          className="block hover:bg-red-50 px-4 py-2 w-full text-red-600 hover:text-red-700 text-sm text-left transition-colors"
+                          className="block hover:bg-red-50 px-4 py-2 w-full text-red-600 hover:text-red-700 text-sm text-left transition-colors cursor-pointer"
                         >
                           Logout
                         </button>
