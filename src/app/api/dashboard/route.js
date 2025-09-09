@@ -103,10 +103,23 @@ export async function GET(request) {
     }
     
     // Get usage data
+    const today = new Date();
+    const currentDay = today.getDate();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    
+    // Base download usage that increases throughout the month (from 5GB to 977GB)
+    const minDownload = 5;
+    const maxDownload = 977;
+    const dailyDownloadGrowth = (maxDownload - minDownload) / (daysInMonth - 1);
+    const downloadedGB = Math.min(minDownload + (currentDay - 1) * dailyDownloadGrowth, maxDownload);
+    
+    // Upload usage is 13% less than download usage
+    const uploadedGB = downloadedGB * 0.87;
+    
     const usageData = {
-      downloadedGB: Math.floor(Math.random() * 500),
-      uploadedGB: Math.floor(Math.random() * 200),
-      periodStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      downloadedGB: parseFloat(downloadedGB.toFixed(1)),
+      uploadedGB: parseFloat(uploadedGB.toFixed(1)),
+      periodStart: new Date(today.getFullYear(), today.getMonth(), 1).toISOString(),
       periodEnd: new Date().toISOString()
     };
     
@@ -117,6 +130,10 @@ export async function GET(request) {
       tickets: ticketData,
       appointment: appointmentData,
       usage: usageData
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=59'
+      }
     });
     
   } catch (error) {
@@ -141,6 +158,10 @@ export async function GET(request) {
         uploadedGB: 0,
         periodStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
         periodEnd: new Date().toISOString()
+      }
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=59'
       }
     });
   }

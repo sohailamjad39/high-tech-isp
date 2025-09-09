@@ -4,7 +4,7 @@
 import { SessionProvider, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Icons
 function UserIcon() {
@@ -264,6 +264,49 @@ function ErrorState({ message, onRetry }) {
   );
 }
 
+// Cache utilities
+const PROFILE_CACHE_KEY = 'profile_data';
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+// Get data from localStorage cache
+const getCache = () => {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+    if (!cached) return null;
+    
+    const { data, timestamp } = JSON.parse(cached);
+    
+    // Check if cache is still valid
+    if (Date.now() - timestamp < CACHE_DURATION) {
+      return data;
+    } else {
+      // Cache expired
+      localStorage.removeItem(PROFILE_CACHE_KEY);
+      return null;
+    }
+  } catch (e) {
+    console.error('Cache error:', e);
+    return null;
+  }
+};
+
+// Set data to localStorage cache
+const setCache = (data) => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const cacheData = {
+      data,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(cacheData));
+  } catch (e) {
+    console.error('Failed to set cache:', e);
+  }
+};
+
 // Fetch profile data function
 const fetchProfileData = async () => {
   const response = await fetch('/api/profile');
@@ -276,6 +319,8 @@ const fetchProfileData = async () => {
   const data = await response.json();
   
   if (data.success && data.user) {
+    // Update cache with fresh data
+    setCache(data.user);
     return data.user;
   } else {
     throw new Error(data.message || 'Invalid response data');
@@ -283,31 +328,63 @@ const fetchProfileData = async () => {
 };
 
 function ProfileContent() {
-  const {  session, status } = useSession();
+  const { data: session, status } = useSession();
+  const queryClient = useQueryClient();
   
-  // Use React Query for caching
-  const { data: user, isLoading, error, isFetching } = useQuery({
-    queryKey: ['profile'],
-    queryFn: fetchProfileData,
-    enabled: status === 'authenticated',
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
-    refetchOnWindowFocus: false, // We'll handle this manually
-    refetchOnReconnect: true,
-    retry: 1
-  });
+  // State for immediate display from cache
+  const [cachedUser, setCachedUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showContent, setShowContent] = useState(false);
+
+  // Load from cache immediately on mount
+  useEffect(() => {
+    // Load from cache immediately, regardless of session status
+    const cache = getCache();
+    if (cache) {
+      setCachedUser(cache);
+      setShowContent(true);
+    } else {
+      // Only show content when we have data
+      setShowContent(status !== 'loading');
+    }
+    
+    // Only fetch fresh data if authenticated
+    if (status === 'authenticated') {
+      fetchProfileData()
+        .then(user => {
+          setCachedUser(user);
+          setIsLoading(false);
+          setShowContent(true);
+        })
+        .catch(err => {
+          setError(err.message);
+          setIsLoading(false);
+          
+          // If we have cache but fetch failed, keep using cache
+          if (!cachedUser && cache) {
+            setCachedUser(cache);
+          }
+        });
+    }
+  }, [status, session]);
 
   // Handle visibility change for background refresh
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !isFetching && status === 'authenticated') {
-        // Only refetch if data is stale
-        const queryClient = window.queryClient;
-        if (queryClient) {
-          const queryState = queryClient.getQueryState(['profile']);
-          if (queryState && (Date.now() - queryState.dataUpdatedAt) > 5 * 60 * 1000) {
-            queryClient.invalidateQueries(['profile']);
-          }
+      if (
+        document.visibilityState === 'visible' &&
+        status === 'authenticated' &&
+        cachedUser
+      ) {
+        // Only refresh if cache is older than 5 minutes
+        const cache = getCache();
+        if (!cache || (Date.now() - cache.timestamp) > 24 * 60 * 60 * 1000) {
+          // Background refresh without affecting UI
+          fetchProfileData().catch(err => {
+            console.error("Background refresh failed:", err);
+            // Continue using current data
+          });
         }
       }
     };
@@ -316,17 +393,11 @@ function ProfileContent() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isFetching, status]);
+  }, [status, cachedUser]);
 
-  // Show loading state
-  if (status === 'loading' || isLoading) {
-    return (
-      <div className="bg-gray-50 px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
-        <div className="mx-auto max-w-3xl">
-          <SkeletonLoader />
-        </div>
-      </div>
-    );
+  // Don't show anything until we determine what to display
+  if (!showContent) {
+    return null;
   }
 
   // Show unauthenticated state
@@ -348,13 +419,25 @@ function ProfileContent() {
   }
 
   // Show error state
-  if (error) {
+  if (error && !cachedUser) {
     return (
       <div className="bg-gray-50 px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
         <div className="mx-auto max-w-3xl">
           <ErrorState 
-            message={error.message} 
-            onRetry={() => window.queryClient?.invalidateQueries(['profile'])} 
+            message={error} 
+            onRetry={() => {
+              setIsLoading(true);
+              setError(null);
+              fetchProfileData()
+                .then(user => {
+                  setCachedUser(user);
+                  setIsLoading(false);
+                })
+                .catch(err => {
+                  setError(err.message);
+                  setIsLoading(false);
+                });
+            }} 
           />
         </div>
       </div>
@@ -368,15 +451,6 @@ function ProfileContent() {
         <div className="mb-6">
           <h1 className="font-bold text-gray-900 text-2xl">My Profile</h1>
           <p className="mt-1 text-gray-600">Manage your account information and preferences</p>
-          {isFetching && (
-            <div className="flex items-center mt-2 text-blue-600 text-sm">
-              <svg className="mr-1 w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Updating profile data...
-            </div>
-          )}
         </div>
         
         <div className="space-y-6 mx-auto max-w-3xl">
@@ -391,17 +465,17 @@ function ProfileContent() {
               <div className="space-y-4">
                 <InfoItem 
                   label="Full Name" 
-                  value={user?.name} 
+                  value={cachedUser?.name} 
                   icon={UserIcon} 
                 />
                 <InfoItem 
                   label="Email Address" 
-                  value={user?.email} 
+                  value={cachedUser?.email} 
                   icon={MailIcon} 
                 />
                 <InfoItem 
                   label="Phone Number" 
-                  value={user?.phone} 
+                  value={cachedUser?.phone} 
                   icon={PhoneIcon} 
                 />
                 <div className="flex items-center space-x-3">
@@ -411,7 +485,7 @@ function ProfileContent() {
                   <div>
                     <p className="font-medium text-gray-500 text-sm">Account Role</p>
                     <div className="mt-1">
-                      <RoleBadge role={user?.role} />
+                      <RoleBadge role={cachedUser?.role} />
                     </div>
                   </div>
                 </div>
@@ -422,7 +496,7 @@ function ProfileContent() {
                   <div>
                     <p className="font-medium text-gray-500 text-sm">Account Status</p>
                     <div className="mt-1">
-                      <StatusBadge status={user?.status} />
+                      <StatusBadge status={cachedUser?.status} />
                     </div>
                   </div>
                 </div>
@@ -441,18 +515,18 @@ function ProfileContent() {
               <div className="space-y-4">
                 <DateItem 
                   label="Account Created" 
-                  date={user?.createdAt} 
+                  date={cachedUser?.createdAt} 
                   icon={CalendarIcon} 
                 />
                 <DateItem 
                   label="Last Login" 
-                  date={user?.lastLoginAt} 
+                  date={cachedUser?.lastLoginAt} 
                   icon={ClockIcon} 
                 />
-                {user?.emailVerifiedAt && (
+                {cachedUser?.emailVerifiedAt && (
                   <DateItem 
                     label="Email Verified" 
-                    date={user.emailVerifiedAt} 
+                    date={cachedUser.emailVerifiedAt} 
                     icon={MailIcon} 
                   />
                 )}
@@ -461,7 +535,7 @@ function ProfileContent() {
           </ProfileCard>
 
           {/* Preferences */}
-          {user?.preferences && (
+          {cachedUser?.preferences && (
             <ProfileCard>
               <ProfileHeader 
                 title="Preferences" 
@@ -472,11 +546,11 @@ function ProfileContent() {
                 <div className="space-y-6">
                   <PreferencesItem 
                     label="Notification Preferences" 
-                    preferences={user.preferences.notifications} 
+                    preferences={cachedUser.preferences.notifications} 
                   />
                   <div>
                     <p className="mb-3 font-medium text-gray-500 text-sm">Language</p>
-                    <p className="text-gray-900 text-sm">{user.preferences.language || 'English'}</p>
+                    <p className="text-gray-900 text-sm">{cachedUser.preferences.language || 'English'}</p>
                   </div>
                 </div>
               </ProfileSection>

@@ -261,8 +261,8 @@ export default function SubscriptionPage() {
   } = useQuery({
     queryKey: ['dashboard'],
     queryFn: fetchDashboardData,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 24 * 60 * 60 * 1000, // 5 minutes
+    cacheTime: 42 * 60 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     retry: 1
@@ -273,10 +273,10 @@ export default function SubscriptionPage() {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && !isFetching) {
         // Only refetch if data is stale
-        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+        const fiveMinutesAgo = Date.now() - 24 * 60 * 60 * 1000;
         const dataAge = Date.now() - (data?.fetchedAt || 0);
         
-        if (dataAge > 5 * 60 * 1000) {
+        if (dataAge > 24 * 60 * 60 * 1000) {
           refetch();
         }
       }

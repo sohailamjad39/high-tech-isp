@@ -1,7 +1,8 @@
 // app/dashboard/billing/page.jsx
 "use client"
-import { useQuery } from '@tanstack/react-query';
+import { SessionProvider, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Status badge component
 function StatusBadge({ status }) {
@@ -263,43 +264,76 @@ const fetchBillingData = async ({ page = 1, limit = 10 }) => {
   const result = await response.json();
   
   if (result.success) {
-    return result;
+    // Add timestamp for tracking data age
+    return {
+      ...result,
+      fetchedAt: Date.now()
+    };
   } else {
     throw new Error(result.message || 'Failed to fetch billing data');
   }
 };
 
-// Main Bills Page
-export default function BillsPage() {
+function BillingContent() {
+  const { data: session, status } = useSession();
   const [currentPage, setCurrentPage] = useState(1);
+  const queryClient = useQueryClient();
   
-  // Use React Query for caching
+  // Use React Query for caching with background refetch
   const { 
     data, 
     isLoading, 
     error,
-    isFetching,
-    refetch 
+    isFetching 
   } = useQuery({
     queryKey: ['billing', currentPage],
     queryFn: () => fetchBillingData({ page: currentPage, limit: 10 }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    enabled: status === 'authenticated' && session?.user?.role === 'customer',
+    staleTime: 24 * 60 * 60 * 1000, // Consider data fresh for 5 minutes
+    cacheTime: 42 * 60 * 60 * 1000, // Keep in cache for 30 minutes
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
-    retry: 1
+    retry: 1,
+    refetchInterval: false,
+    refetchIntervalInBackground: false
   });
+
+  // Handle background refresh when component mounts
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'customer') {
+      // Immediately fetch fresh data in the background when component mounts
+      const fetchData = async () => {
+        try {
+          await queryClient.fetchQuery({
+            queryKey: ['billing', currentPage],
+            queryFn: () => fetchBillingData({ page: currentPage, limit: 10 }),
+            staleTime: 0 // Force refetch even if data is fresh
+          });
+        } catch (error) {
+          console.error('Background refresh failed:', error);
+          // Keep using cached data if background refresh fails
+        }
+      };
+
+      // Fetch fresh data in the background
+      fetchData();
+    }
+  }, [status, session, currentPage, queryClient]);
 
   // Handle visibility change for background refresh
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !isFetching) {
-        // Only refetch if data is stale
-        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-        const dataAge = Date.now() - (data?.fetchedAt || 0);
-        
-        if (dataAge > 5 * 60 * 1000) {
-          refetch();
+      if (document.visibilityState === 'visible' && status === 'authenticated' && session?.user?.role === 'customer') {
+        // Only refresh if data is stale
+        const queryState = queryClient.getQueryState(['billing', currentPage]);
+        if (queryState && (Date.now() - queryState.dataUpdatedAt) > 24 * 60 * 60 * 1000) {
+          queryClient.fetchQuery({
+            queryKey: ['billing', currentPage],
+            queryFn: () => fetchBillingData({ page: currentPage, limit: 10 }),
+            staleTime: 0 // Force refetch
+          }).catch(error => {
+            console.error('Background refresh on visibility change failed:', error);
+          });
         }
       }
     };
@@ -308,7 +342,7 @@ export default function BillsPage() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isFetching, data, refetch]);
+  }, [status, session, currentPage, queryClient]);
 
   const handlePageChange = (page) => {
     if (page >= 1 && (!data?.pagination || page <= data.pagination.totalPages)) {
@@ -324,7 +358,9 @@ export default function BillsPage() {
             <h3 className="font-medium text-red-800">Error</h3>
             <p className="mt-2 text-red-700">{error.message}</p>
             <button
-              onClick={() => refetch()}
+              onClick={() => {
+                queryClient.invalidateQueries(['billing', currentPage]);
+              }}
               className="bg-red-600 hover:bg-red-700 mt-4 px-4 py-2 rounded-lg text-white"
             >
               Try Again
@@ -357,5 +393,14 @@ export default function BillsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main Bills Page
+export default function BillsPage() {
+  return (
+    <SessionProvider>
+      <BillingContent />
+    </SessionProvider>
   );
 }
