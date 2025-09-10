@@ -122,8 +122,16 @@ UserSchema.pre('save', async function(next) {
 
 // Method to compare passwords
 UserSchema.methods.comparePassword = async function(candidatePassword) {
+  // Ensure candidatePassword is a string and not empty
+  if (!candidatePassword || typeof candidatePassword !== 'string') {
+    return false;
+  }
+  
+  if (!this.passwordHash) {
+    return false;
+  }
+  
   return await bcrypt.compare(candidatePassword, this.passwordHash);
 };
-
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

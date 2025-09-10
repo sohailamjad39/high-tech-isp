@@ -194,7 +194,7 @@ export default function Navbar({ initialSession = null }) {
     if (userRole === 'visitor') {
       return [
         { href: '/profile', label: 'Profile' },
-        { href: '/dashboard/settings', label: 'Settings' },
+        { href: '/settings', label: 'Settings' },
       ];
     } else if (userRole === 'customer') {
       return [
@@ -202,7 +202,7 @@ export default function Navbar({ initialSession = null }) {
         { href: '/dashboard/subscription', label: 'My Internet Plan' },
         { href: '/dashboard/billing', label: 'Bills' },
         { href: '/profile', label: 'Profile' },
-        { href: '/dashboard/settings', label: 'Settings' },
+        { href: '/settings', label: 'Settings' },
       ];
     } else if (userRole === 'admin') {
       return [
@@ -244,7 +244,7 @@ export default function Navbar({ initialSession = null }) {
       return [
         { href: '/dashboard/overview', label: 'Dashboard' },
         { href: '/profile', label: 'Profile' },
-        { href: '/dashboard/settings', label: 'Settings' },
+        { href: '/settings', label: 'Settings' },
       ];
     }
   };
