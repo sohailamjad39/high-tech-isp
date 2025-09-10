@@ -50,6 +50,45 @@ export async function middleware(request) {
     "/plans/checkout",
   ];
 
+  // Admin-only routes - only accessible by users with 'admin' role
+  const adminOnlyRoutes = [
+    "/admin",
+    "/admin/",
+    "/admin/dashboard",
+    "/admin/customers",
+    "/admin/orders",
+    "/admin/subscriptions",
+    "/admin/billing",
+    "/admin/tickets",
+    "/admin/installations",
+    "/admin/technicians",
+    "/admin/plans",
+    "/admin/addons",
+    "/admin/coverage",
+    "/admin/offices",
+    "/admin/network",
+    "/admin/outages",
+    "/admin/cms",
+    "/admin/promo-codes",
+    "/admin/reports",
+    "/admin/audit",
+    "/admin/settings",
+    "/api/admin"
+  ];
+
+  // Routes that admin should NOT access (customer dashboard routes)
+  const adminRestrictedRoutes = [
+    "/dashboard",
+    "/dashboard/",
+    "/dashboard/subscription",
+    "/dashboard/billing",
+    "/dashboard/usage",
+    "/dashboard/appointments",
+    "/dashboard/tickets",
+    "/dashboard/profile",
+    "/dashboard/notifications"
+  ];
+
   // Check for NextAuth session cookie
   const sessionCookie = request.cookies.get("next-auth.session-token");
 
@@ -91,7 +130,20 @@ export async function middleware(request) {
           return NextResponse.redirect(new URL('/plans', request.url));
         }
         
-        // Role-based access control
+        // Prevent admin from accessing customer dashboard routes
+        if (userRole === 'admin' && adminRestrictedRoutes.some(route => pathname.startsWith(route))) {
+          return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+        }
+        
+        // Admin-only routes access control
+        if (adminOnlyRoutes.some(route => pathname.startsWith(route))) {
+          if (userRole !== 'admin') {
+            return NextResponse.redirect(new URL('/unauthorized', request.url));
+          }
+          // Admin can access admin routes, continue
+        }
+        
+        // Role-based access control for other routes
         if (pathname.startsWith('/admin') && userRole !== 'admin') {
           return NextResponse.redirect(new URL('/unauthorized', request.url));
         }
