@@ -81,6 +81,12 @@ const UserSchema = new mongoose.Schema({
   verificationTokenExpires: {
     type: Date,
     select: false
+  },
+  
+  addressId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Address',
+    default: null
   }
 }, {
   timestamps: true,
@@ -98,6 +104,8 @@ const UserSchema = new mongoose.Schema({
 // Indexes as per blueprint
 UserSchema.index({ email: 1 });
 UserSchema.index({ phone: 1 });
+// Add index for addressId for better query performance
+UserSchema.index({ addressId: 1 });
 
 // Hash password before saving
 UserSchema.pre('save', async function(next) {

@@ -32,6 +32,15 @@ function PhoneIcon() {
   );
 }
 
+function LocationIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+}
+
 function ShieldIcon() {
   return (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,6 +276,15 @@ function EditProfileContent() {
     name: '',
     email: '',
     phone: '',
+    address: {
+      label: '',
+      line1: '',
+      line2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: ''
+    },
     preferences: {
       notifications: {
         email: true,
@@ -295,6 +313,15 @@ function EditProfileContent() {
             name: user.name || '',
             email: user.email || '',
             phone: user.phone || '',
+            address: user.address || {
+              label: '',
+              line1: '',
+              line2: '',
+              city: '',
+              state: '',
+              postalCode: '',
+              country: ''
+            },
             preferences: {
               notifications: {
                 email: user.preferences?.notifications?.email ?? true,
@@ -320,16 +347,24 @@ function EditProfileContent() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    // Handle nested preferences
-    if (name.startsWith('preferences.')) {
-      const [pref, subPref] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        preferences: {
-          ...prev.preferences,
-          [subPref]: type === 'checkbox' ? checked : value
+    // Handle nested properties
+    if (name.includes('.')) {
+      const parts = name.split('.');
+      setFormData(prev => {
+        const updated = { ...prev };
+        let current = updated;
+        
+        // Navigate to the nested property
+        for (let i = 0; i < parts.length - 1; i++) {
+          current[parts[i]] = { ...current[parts[i]] };
+          current = current[parts[i]];
         }
-      }));
+        
+        // Set the final value
+        current[parts[parts.length - 1]] = type === 'checkbox' ? checked : value;
+        
+        return updated;
+      });
     } else {
       setFormData(prev => ({
         ...prev,
@@ -362,6 +397,31 @@ function EditProfileContent() {
     
     if (formData.phone && !/^\+?[\d\s\-\(\)]{10,}$/.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
+    }
+    
+    // Validate address fields
+    if (!formData.address?.label?.trim()) {
+      newErrors['address.label'] = 'Address label is required';
+    }
+    
+    if (!formData.address?.line1?.trim()) {
+      newErrors['address.line1'] = 'Address line 1 is required';
+    }
+    
+    if (!formData.address?.city?.trim()) {
+      newErrors['address.city'] = 'City is required';
+    }
+    
+    if (!formData.address?.state?.trim()) {
+      newErrors['address.state'] = 'State is required';
+    }
+    
+    if (!formData.address?.postalCode?.trim()) {
+      newErrors['address.postalCode'] = 'Postal code is required';
+    }
+    
+    if (!formData.address?.country?.trim()) {
+      newErrors['address.country'] = 'Country is required';
     }
     
     setErrors(newErrors);
@@ -425,7 +485,7 @@ function EditProfileContent() {
               </div>
               <div className="p-6">
                 <div className="space-y-6">
-                  {[1, 2, 3, 4].map(i => (
+                  {[1, 2, 3, 4, 5].map(i => (
                     <div key={i} className="space-y-2">
                       <div className="bg-gray-200 rounded w-1/4 h-4"></div>
                       <div className="bg-gray-200 rounded h-10"></div>
@@ -534,6 +594,133 @@ function EditProfileContent() {
                       error={errors.phone}
                       placeholder="+1 (555) 123-4567"
                     />
+                  </div>
+                </div>
+
+                {/* Address Information */}
+                <div>
+                  <h3 className="mb-4 font-medium text-gray-900">Address Information</h3>
+                  <div className="space-y-4">
+                    <FormField
+                      label="Address Label"
+                      name="address.label"
+                      value={formData.address?.label || ''}
+                      onChange={handleChange}
+                      error={errors['address.label']}
+                      placeholder="Home, Work, etc."
+                      required
+                    />
+                    
+                    <FormField
+                      label="Address Line 1"
+                      name="address.line1"
+                      value={formData.address?.line1 || ''}
+                      onChange={handleChange}
+                      error={errors['address.line1']}
+                      placeholder="123 Main Street"
+                      required
+                    />
+                    
+                    <FormField
+                      label="Address Line 2 (Optional)"
+                      name="address.line2"
+                      value={formData.address?.line2 || ''}
+                      onChange={handleChange}
+                      error={errors['address.line2']}
+                      placeholder="Apartment, suite, etc."
+                    />
+                    
+                    <div className="gap-4 grid grid-cols-2">
+                      <FormField
+                        label="City"
+                        name="address.city"
+                        value={formData.address?.city || ''}
+                        onChange={handleChange}
+                        error={errors['address.city']}
+                        placeholder="New York"
+                        required
+                      />
+                      
+                      <FormField
+                        label="State"
+                        name="address.state"
+                        value={formData.address?.state || ''}
+                        onChange={handleChange}
+                        error={errors['address.state']}
+                        placeholder="NY"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="gap-4 grid grid-cols-2">
+                      <FormField
+                        label="Postal Code"
+                        name="address.postalCode"
+                        value={formData.address?.postalCode || ''}
+                        onChange={handleChange}
+                        error={errors['address.postalCode']}
+                        placeholder="10001"
+                        required
+                      />
+                      
+                      <FormField
+                        label="Country"
+                        name="address.country"
+                        value={formData.address?.country || ''}
+                        onChange={handleChange}
+                        error={errors['address.country']}
+                        placeholder="US"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notification Preferences */}
+                <div>
+                  <h3 className="mb-4 font-medium text-gray-900">Notification Preferences</h3>
+                  <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                    <CheckboxField
+                      label="Email Notifications"
+                      name="preferences.notifications.email"
+                      checked={formData.preferences?.notifications?.email}
+                      onChange={handleChange}
+                      description="Receive important updates and alerts via email"
+                    />
+                    
+                    <CheckboxField
+                      label="SMS Notifications"
+                      name="preferences.notifications.sms"
+                      checked={formData.preferences?.notifications?.sms}
+                      onChange={handleChange}
+                      description="Receive service alerts and reminders via text message"
+                    />
+                    
+                    <CheckboxField
+                      label="Push Notifications"
+                      name="preferences.notifications.push"
+                      checked={formData.preferences?.notifications?.push}
+                      onChange={handleChange}
+                      description="Receive real-time notifications in your browser"
+                    />
+                  </div>
+                </div>
+
+                {/* Language Preference */}
+                <div>
+                  <h3 className="mb-4 font-medium text-gray-900">Language</h3>
+                  <div className="max-w-xs">
+                    <select
+                      name="preferences.language"
+                      value={formData.preferences?.language || 'en'}
+                      onChange={handleChange}
+                      className="block shadow-sm px-4 py-3 border border-gray-300 focus:border-blue-500 rounded-lg focus:outline-none focus:ring-blue-500 w-full"
+                    >
+                      <option value="en">English</option>
+                      <option value="es">Spanish</option>
+                      <option value="fr">French</option>
+                      <option value="de">German</option>
+                    </select>
                   </div>
                 </div>
 

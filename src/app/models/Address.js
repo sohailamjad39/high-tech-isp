@@ -45,23 +45,6 @@ const AddressSchema = new mongoose.Schema({
     uppercase: true,
     length: 2
   },
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      required: true
-    },
-    coordinates: {
-      type: [Number],
-      required: true,
-      validate: {
-        validator: function(coordinates) {
-          return coordinates.length === 2;
-        },
-        message: 'Coordinates must be an array of [longitude, latitude]'
-      }
-    }
-  },
   isPrimary: {
     type: Boolean,
     default: false
@@ -87,18 +70,6 @@ const AddressSchema = new mongoose.Schema({
   }
 });
 
-// 2dsphere index for geospatial queries as per blueprint
-AddressSchema.index({ location: '2dsphere' });
-
-// Virtual for customer profile
-AddressSchema.virtual('customerProfile', {
-  ref: 'CustomerProfile',
-  localField: '_id',
-  foreignField: 'defaultAddressId',
-  justOne: true
-});
-
-// Virtual for orders
 AddressSchema.virtual('orders', {
   ref: 'Order',
   localField: '_id',

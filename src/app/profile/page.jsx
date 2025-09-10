@@ -55,6 +55,15 @@ function ShieldIcon() {
   );
 }
 
+function LocationIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+}
+
 // Components
 function ProfileCard({ children, className = "" }) {
   return (
@@ -228,7 +237,7 @@ function SkeletonLoader() {
         
         <div className="p-6">
           <div className="space-y-4">
-            {[1, 2, 3, 4].map(i => (
+            {[1, 2, 3, 4, 5].map(i => (
               <div key={i} className="flex items-start space-x-3">
                 <div className="bg-gray-200 rounded w-5 h-5"></div>
                 <div className="flex-1">
@@ -444,6 +453,26 @@ function ProfileContent() {
     );
   }
 
+  // Format address for display
+  const formatAddress = (address) => {
+    if (!address) return null;
+    
+    const parts = [];
+    if (address.line1) parts.push(address.line1);
+    if (address.line2) parts.push(address.line2);
+    if (address.city || address.state || address.postalCode) {
+      const cityStateZip = [
+        address.city,
+        address.state,
+        address.postalCode
+      ].filter(Boolean).join(', ');
+      parts.push(cityStateZip);
+    }
+    if (address.country) parts.push(address.country);
+    
+    return parts.join('\n');
+  };
+
   // Show profile content
   return (
     <div className="bg-gray-50 mt-15 px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
@@ -501,6 +530,67 @@ function ProfileContent() {
                   </div>
                 </div>
               </div>
+            </ProfileSection>
+          </ProfileCard>
+
+          {/* Address Information */}
+          <ProfileCard>
+            <ProfileHeader 
+              title="Address Information" 
+              subtitle="Your service address details" 
+              icon={LocationIcon} 
+            />
+            <ProfileSection>
+              {cachedUser?.address ? (
+                <div className="space-y-4">
+                  <InfoItem 
+                    label="Address Label" 
+                    value={cachedUser.address.label} 
+                    icon={LocationIcon} 
+                  />
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 mt-1 text-gray-400">
+                      <LocationIcon />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-500 text-sm">Address</p>
+                      <p className="mt-1 text-gray-900 text-sm whitespace-pre-line">
+                        {formatAddress(cachedUser.address)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0 text-gray-400">
+                      <ShieldIcon />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-500 text-sm">Address Status</p>
+                      <div className="mt-1">
+                        <StatusBadge 
+                          status={cachedUser.address.verified ? "active" : "pending"} 
+                          variant={cachedUser.address.verified ? "active" : "default"} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {cachedUser.address.verificationDate && (
+                    <DateItem 
+                      label="Verified On" 
+                      date={cachedUser.address.verificationDate} 
+                      icon={CalendarIcon} 
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="py-6 text-center">
+                  <svg className="mx-auto w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <p className="mt-4 text-gray-500 text-sm">No address has been added</p>
+                  <p className="mt-1 text-gray-400 text-xs">Your service address will be displayed here once added</p>
+                </div>
+              )}
             </ProfileSection>
           </ProfileCard>
 
