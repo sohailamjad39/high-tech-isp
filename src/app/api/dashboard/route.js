@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { connectToDatabase } from '@/app/lib/db';
 import Subscription from '@/app/models/Subscription';
+import ServicePlan from '@/app/models/ServicePlan';
 import Invoice from '@/app/models/Invoice';
 import Ticket from '@/app/models/Ticket';
 import InstallationJob from '@/app/models/InstallationJob';

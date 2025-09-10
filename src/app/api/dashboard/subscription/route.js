@@ -22,11 +22,11 @@ export async function GET(request) {
       );
     }
     
-    // Find the user's active subscription
+    // Find the user's active subscription - sort by createdAt to get the latest one
     const subscription = await Subscription.findOne({ 
       customerId: session.user.id,
       status: { $in: ['trial', 'active', 'past_due', 'paused'] }
-    });
+    }).sort({ createdAt: -1 }); // Sort by createdAt descending to get the latest subscription
     
     // Get the plan details directly from ServicePlan if subscription exists
     let planData = null;
