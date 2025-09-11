@@ -58,12 +58,13 @@ const setCache = (data) => {
 };
 
 // Fetch tickets data function
-const fetchTicketsData = async (searchTerm = '', statusFilter = 'all', categoryFilter = 'all') => {
+const fetchTicketsData = async (searchTerm = '', statusFilter = 'all', categoryFilter = 'all', priorityFilter = 'all') => {
   const params = new URLSearchParams();
   
   if (searchTerm) params.append('search', searchTerm);
   if (statusFilter !== 'all') params.append('status', statusFilter);
   if (categoryFilter !== 'all') params.append('category', categoryFilter);
+  if (priorityFilter !== 'all') params.append('priority', priorityFilter);
   params.append('page', '1');
   params.append('limit', '10');
 
@@ -297,7 +298,7 @@ function ViewTicketModal({ ticket, isOpen, onClose, onUpdateStatus }) {
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 ticket.status === 'pending' 
                   ? 'bg-yellow-100 text-yellow-800 cursor-not-allowed' 
-                  : 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                  : 'bg-yellow-600 hover:bg-yellow-700 text-white cursor-pointer'
               }`}
               onClick={() => onUpdateStatus('pending')}
               disabled={ticket.status === 'pending'}
@@ -310,7 +311,7 @@ function ViewTicketModal({ ticket, isOpen, onClose, onUpdateStatus }) {
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 ticket.status === 'in_progress' 
                   ? 'bg-blue-100 text-blue-800 cursor-not-allowed' 
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
               }`}
               onClick={() => onUpdateStatus('in_progress')}
               disabled={ticket.status === 'in_progress'}
@@ -323,7 +324,7 @@ function ViewTicketModal({ ticket, isOpen, onClose, onUpdateStatus }) {
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 ticket.status === 'resolved' 
                   ? 'bg-green-100 text-green-800 cursor-not-allowed' 
-                  : 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-green-600 hover:bg-green-700 text-white cursor-pointer'
               }`}
               onClick={() => onUpdateStatus('resolved')}
               disabled={ticket.status === 'resolved'}
@@ -336,7 +337,7 @@ function ViewTicketModal({ ticket, isOpen, onClose, onUpdateStatus }) {
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 ticket.status === 'on_hold' 
                   ? 'bg-red-100 text-red-800 cursor-not-allowed' 
-                  : 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-red-600 hover:bg-red-700 text-white cursor-pointer'
               }`}
               onClick={() => onUpdateStatus('on_hold')}
               disabled={ticket.status === 'on_hold'}
@@ -349,7 +350,7 @@ function ViewTicketModal({ ticket, isOpen, onClose, onUpdateStatus }) {
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 ticket.status === 'closed' 
                   ? 'bg-gray-100 text-gray-800 cursor-not-allowed' 
-                  : 'bg-gray-600 hover:bg-gray-700 text-white'
+                  : 'bg-gray-600 hover:bg-gray-700 text-white cursor-pointer'
               }`}
               onClick={() => onUpdateStatus('closed')}
               disabled={ticket.status === 'closed'}
@@ -361,7 +362,7 @@ function ViewTicketModal({ ticket, isOpen, onClose, onUpdateStatus }) {
           <div className="bg-gray-50 px-4 sm:px-6 py-3">
             <button
               type="button"
-              className="inline-flex justify-center bg-blue-600 hover:bg-blue-700 shadow-sm px-4 py-2 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto font-medium text-white text-base"
+              className="inline-flex justify-center bg-blue-600 hover:bg-blue-700 shadow-sm px-4 py-2 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto font-medium text-white text-base cursor-pointer"
               onClick={onClose}
             >
               Close
@@ -390,6 +391,7 @@ function TicketsContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
 
   // Use React Query for caching with background refresh
@@ -399,12 +401,12 @@ function TicketsContent() {
     error: queryError,
     refetch 
   } = useQuery({
-    queryKey: ['adminTickets', searchTerm, statusFilter, categoryFilter],
-    queryFn: () => fetchTicketsData(searchTerm, statusFilter, categoryFilter),
+    queryKey: ['adminTickets', searchTerm, statusFilter, categoryFilter, priorityFilter],
+    queryFn: () => fetchTicketsData(searchTerm, statusFilter, categoryFilter, priorityFilter),
     enabled: status === 'authenticated' && session?.user?.role === 'admin',
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,  // Enable background refresh when window regains focus
     refetchOnReconnect: true,
     retry: 1
   });
@@ -413,8 +415,8 @@ function TicketsContent() {
   const updateStatusMutation = useMutation({
     mutationFn: updateTicketStatus,
     onSuccess: (data) => {
-      // Update the local cache
-      queryClient.setQueryData(['adminTickets', searchTerm, statusFilter, categoryFilter], (oldData) => {
+      // Update the local cache immediately
+      queryClient.setQueryData(['adminTickets', searchTerm, statusFilter, categoryFilter, priorityFilter], (oldData) => {
         if (!oldData) return oldData;
         
         return {
@@ -454,7 +456,7 @@ function TicketsContent() {
       }
       
       // Always fetch fresh data
-      fetchTicketsData(searchTerm, statusFilter, categoryFilter)
+      fetchTicketsData(searchTerm, statusFilter, categoryFilter, priorityFilter)
         .then(freshData => {
           setCachedData(freshData);
           setIsLoading(false);
@@ -469,7 +471,7 @@ function TicketsContent() {
           }
         });
     }
-  }, [status, session, searchTerm, statusFilter, categoryFilter]);
+  }, [status, session, searchTerm, statusFilter, categoryFilter, priorityFilter]);
 
   // Handle visibility change for background refresh
   useEffect(() => {
@@ -479,13 +481,8 @@ function TicketsContent() {
         status === "authenticated" &&
         session?.user?.role === "admin"
       ) {
-        // Only refresh if data is stale
-        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-        const dataAge = Date.now() - (cachedData?.fetchedAt || 0);
-        
-        if (dataAge > 5 * 60 * 1000) {
-          refetch();
-        }
+        // Refresh data when tab becomes visible
+        refetch();
       }
     };
 
@@ -493,7 +490,7 @@ function TicketsContent() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [status, session, cachedData, refetch]);
+  }, [status, session, refetch]);
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
@@ -571,7 +568,7 @@ function TicketsContent() {
             </p>
           </div>
 
-          <SkeletonTable columns={7} rows={10} />
+          <SkeletonTable columns={8} rows={10} />
         </div>
       </div>
     );
@@ -670,6 +667,19 @@ function TicketsContent() {
                     value={categoryFilter}
                     onChange={setCategoryFilter}
                   />
+                  
+                  <FilterDropdown
+                    label="Priority"
+                    options={[
+                      { value: "all", label: "All Priorities" },
+                      { value: "low", label: "Low" },
+                      { value: "medium", label: "Medium" },
+                      { value: "high", label: "High" },
+                      { value: "urgent", label: "Urgent" },
+                    ]}
+                    value={priorityFilter}
+                    onChange={setPriorityFilter}
+                  />
                 </div>
               </div>
             </div>
@@ -753,6 +763,19 @@ function TicketsContent() {
                   value={categoryFilter}
                   onChange={setCategoryFilter}
                 />
+                
+                <FilterDropdown
+                  label="Priority"
+                  options={[
+                    { value: "all", label: "All Priorities" },
+                    { value: "low", label: "Low" },
+                    { value: "medium", label: "Medium" },
+                    { value: "high", label: "High" },
+                    { value: "urgent", label: "Urgent" },
+                  ]}
+                  value={priorityFilter}
+                  onChange={setPriorityFilter}
+                />
               </div>
             </div>
           </div>
@@ -821,7 +844,7 @@ function TicketsContent() {
                       <button
                         type="button"
                         onClick={() => openTicketDetails(ticket)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 cursor-pointer"
                       >
                         View Details
                       </button>

@@ -140,8 +140,8 @@ function ViewOrderModal({ order, isOpen, onClose }) {
 
         <span className="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
         
-        <div className="inline-block bg-white shadow-xl sm:my-8 rounded-lg sm:w-full sm:max-w-4xl overflow-hidden text-left sm:align-middle align-bottom transition-all transform">
-          <div className="bg-white sm:p-6 px-4 pt-5 pb-4 sm:pb-4">
+        <div className="inline-block bg-white shadow-xl backdrop-blur-2xl backdrop:blur-2xl sm:my-8 rounded-lg sm:w-full sm:max-w-4xl overflow-hidden text-left sm:align-middle align-bottom transition-all transform">
+          <div className="bg-black/5 sm:p-6 px-4 pt-5 pb-4 sm:pb-4">
             <h3 className="mb-6 font-medium text-gray-900 text-lg leading-6">
               Order Details #{order.orderId}
             </h3>
@@ -286,7 +286,7 @@ function ViewOrderModal({ order, isOpen, onClose }) {
           <div className="sm:flex sm:flex-row-reverse bg-gray-50 px-4 sm:px-6 py-3">
             <button
               type="button"
-              className="inline-flex justify-center bg-blue-600 hover:bg-blue-700 shadow-sm sm:ml-3 px-4 py-2 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto font-medium text-white sm:text-sm text-base"
+              className="inline-flex justify-center bg-blue-600 hover:bg-blue-700 shadow-sm sm:ml-3 px-4 py-2 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto font-medium text-white sm:text-sm text-base cursor-pointer"
               onClick={onClose}
             >
               Close
@@ -703,7 +703,7 @@ function OrdersContent() {
                       <button
                         type="button"
                         onClick={() => openOrderDetails(order)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 cursor-pointer"
                       >
                         View Details
                       </button>

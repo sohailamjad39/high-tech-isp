@@ -309,7 +309,7 @@ export default function Navbar({ initialSession = null }) {
                 <div className="relative" id="user-dropdown">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center space-x-2 bg-white/80 hover:bg-white p-1 border border-white/30 rounded-full transition-all duration-200"
+                    className="flex items-center space-x-2 bg-sky-800/20 hover:bg-sky-800/30 p-1 border border-white/30 rounded-full transition-all duration-200 cursor-pointer"
                   >
                     <div className="flex justify-center items-center bg-gradient-to-r from-[#2f83aa] to-[#3f88cc] rounded-full w-8 h-8 font-medium text-white text-sm">
                       {session.user?.name?.charAt(0).toUpperCase() || 'U'}

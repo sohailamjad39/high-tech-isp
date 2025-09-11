@@ -33,6 +33,7 @@ export async function GET(request) {
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status');
     const category = searchParams.get('category');
+    const priority = searchParams.get('priority');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
@@ -48,6 +49,11 @@ export async function GET(request) {
     // Add category filter
     if (category && ['technical', 'billing', 'installation', 'service', 'other'].includes(category)) {
       query.category = category;
+    }
+    
+    // Add priority filter
+    if (priority && ['low', 'medium', 'high', 'urgent'].includes(priority)) {
+      query.priority = priority;
     }
     
     // Sort by createdAt descending (newest first)
@@ -118,7 +124,7 @@ export async function GET(request) {
     // Initialize the ticket query with proper structure
     const ticketQuery = {
       $and: [
-        query, // Apply other filters (status, category)
+        query, // Apply other filters (status, category, priority)
         {
           $or: [] // Initialize as empty array
         }
@@ -214,6 +220,110 @@ export async function GET(request) {
       { 
         success: false, 
         error: 'Failed to fetch tickets',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// Handle PATCH request to update ticket status
+export async function PATCH(request, { params }) {
+  try {
+    // Connect to database
+    await connectToDatabase();
+    
+    // Get session
+    const session = await getServerSession(authOptions);
+    
+    // Check if user is authenticated and has admin privileges
+    if (!session || !['admin', 'ops'].includes(session.user.role)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    // Extract ticket ID from the URL
+    const { searchParams } = new URL(request.url);
+    const ticketId = searchParams.get('id');
+    
+    if (!ticketId) {
+      return NextResponse.json(
+        { error: 'Ticket ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Parse request body
+    const body = await request.json();
+    const { status } = body;
+    
+    // Validate status value against schema enum
+    const validStatuses = ['pending', 'in_progress', 'resolved', 'closed', 'on_hold'];
+    if (!status) {
+      return NextResponse.json(
+        { error: 'Status is required' },
+        { status: 400 }
+      );
+    }
+    
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json(
+        { error: 'Invalid status value' },
+        { status: 400 }
+      );
+    }
+    
+    // Find the ticket by ID
+    const ticket = await Ticket.findById(ticketId);
+    
+    if (!ticket) {
+      return NextResponse.json(
+        { error: 'Ticket not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Update the status
+    ticket.status = status;
+    
+    // Save the updated ticket
+    const updatedTicket = await ticket.save();
+    
+    // Populate any referenced fields if needed
+    // In this case, we'll populate the customerId to get customer details
+    await updatedTicket.populate('customerId', 'name email phone');
+    
+    // Format the response
+    const formattedTicket = {
+      id: updatedTicket._id.toString(),
+      code: updatedTicket.code,
+      customerId: updatedTicket.customerId?._id?.toString() || null,
+      customerName: updatedTicket.customerId?.name || 'Unknown',
+      customerEmail: updatedTicket.customerId?.email || 'Unknown',
+      subject: updatedTicket.subject,
+      description: updatedTicket.description,
+      category: updatedTicket.category,
+      priority: updatedTicket.priority,
+      status: updatedTicket.status,
+      messages: updatedTicket.messages,
+      createdAt: updatedTicket.createdAt.toISOString(),
+      updatedAt: updatedTicket.updatedAt.toISOString()
+    };
+    
+    return NextResponse.json({
+      success: true,
+      ticket: formattedTicket,
+      message: 'Ticket status updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error updating ticket status:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to update ticket status',
         message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
       },
       { status: 500 }
