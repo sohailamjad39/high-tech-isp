@@ -271,8 +271,7 @@ function CustomersContent() {
                 "Phone",
                 "Role",
                 "Status",
-                "Created",
-                "Actions",
+                "Created"
               ]}
             >
               {customersData?.customers?.length > 0 ? (
@@ -329,29 +328,12 @@ function CustomersContent() {
                     <td className="px-6 py-4 text-gray-500 text-sm whitespace-nowrap">
                       {new Date(customer.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 font-medium text-sm text-right whitespace-nowrap">
-                      <div className="flex justify-end space-x-2">
-                        <Link
-                          href={`/admin/customer/${customer.id}`}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          View
-                        </Link>
-                        <span className="text-gray-300">|</span>
-                        <Link
-                          href={`/admin/customer/${customer.id}/edit`}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          Edit
-                        </Link>
-                      </div>
-                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="6"
                     className="px-6 py-4 text-gray-500 text-center"
                   >
                     No customers found matching your criteria.

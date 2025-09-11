@@ -87,7 +87,7 @@ export default function LoginPage() {
             } else if (userRole === 'customer') {
               redirectUrl = '/dashboard/overview';
             } else if (userRole === 'admin') {
-              redirectUrl = '/admin';
+              redirectUrl = '/admin/dashboard';
             } else if (userRole === 'tech') {
               redirectUrl = '/tech';
             } else if (userRole === 'support') {

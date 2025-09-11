@@ -32,7 +32,7 @@ export async function POST(request) {
     }
     
     // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: email.toLowerCase() }).select("+passwordHash");
     
     // Check if user exists
     if (!user) {
