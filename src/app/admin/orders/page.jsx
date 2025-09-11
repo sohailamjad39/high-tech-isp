@@ -58,8 +58,17 @@ const setCache = (data) => {
 };
 
 // Fetch orders data function
-const fetchOrdersData = async () => {
-  const response = await fetch("/api/admin/orders");
+const fetchOrdersData = async (searchTerm = '', statusFilter = 'all', planFilter = 'all', customerId = '') => {
+  const params = new URLSearchParams();
+  
+  if (searchTerm) params.append('search', searchTerm);
+  if (statusFilter !== 'all') params.append('status', statusFilter);
+  if (planFilter !== 'all') params.append('planId', planFilter);
+  if (customerId) params.append('customerId', customerId);
+  params.append('page', '1');
+  params.append('limit', '10');
+
+  const response = await fetch(`/api/admin/orders?${params.toString()}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch admin orders data");
@@ -301,6 +310,11 @@ function OrdersContent() {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Add state for search and filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Use React Query for caching with background refresh
   const { 
@@ -309,8 +323,8 @@ function OrdersContent() {
     error: queryError,
     refetch 
   } = useQuery({
-    queryKey: ['adminOrders'],
-    queryFn: fetchOrdersData,
+    queryKey: ['adminOrders', searchTerm, statusFilter],
+    queryFn: () => fetchOrdersData(searchTerm, statusFilter),
     enabled: status === 'authenticated' && session?.user?.role === 'admin',
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
@@ -334,7 +348,7 @@ function OrdersContent() {
       }
       
       // Always fetch fresh data
-      fetchOrdersData()
+      fetchOrdersData(searchTerm, statusFilter)
         .then(freshData => {
           setCachedData(freshData);
           setIsLoading(false);
@@ -349,7 +363,7 @@ function OrdersContent() {
           }
         });
     }
-  }, [status, session]);
+  }, [status, session, searchTerm, statusFilter]);
 
   // Handle visibility change for background refresh
   useEffect(() => {
@@ -403,6 +417,18 @@ function OrdersContent() {
   const closeOrderDetails = () => {
     setIsModalOpen(false);
     setSelectedOrder(null);
+  };
+
+  // Handle search
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // Handle filter changes
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
   };
 
   // Status badge component
@@ -528,7 +554,8 @@ function OrdersContent() {
                 <div className="flex-1 max-w-lg">
                   <SearchBar
                     placeholder="Search by order ID, customer name, email, or plan..."
-                    onSearch={() => {}}
+                    onSearch={handleSearch}
+                    initialValue={searchTerm}
                   />
                 </div>
 
@@ -546,8 +573,8 @@ function OrdersContent() {
                       { value: "cancelled", label: "Cancelled" },
                       { value: "failed", label: "Failed" },
                     ]}
-                    value="all"
-                    onChange={() => {}}
+                    value={statusFilter}
+                    onChange={handleStatusFilterChange}
                   />
                 </div>
               </div>
@@ -598,7 +625,8 @@ function OrdersContent() {
               <div className="flex-1 max-w-lg">
                 <SearchBar
                   placeholder="Search by order ID, customer name, email, or plan..."
-                  onSearch={() => {}}
+                  onSearch={handleSearch}
+                  initialValue={searchTerm}
                 />
               </div>
 
@@ -616,8 +644,8 @@ function OrdersContent() {
                     { value: "cancelled", label: "Cancelled" },
                     { value: "failed", label: "Failed" },
                   ]}
-                  value="all"
-                  onChange={() => {}}
+                  value={statusFilter}
+                  onChange={handleStatusFilterChange}
                 />
               </div>
             </div>
@@ -699,7 +727,7 @@ function OrdersContent() {
           {cachedData?.pagination && (
             <div className="px-6 py-4 border-gray-200 border-t">
               <Pagination
-                currentPage={cachedData.pagination.currentPage}
+                currentPage={currentPage}
                 totalPages={cachedData.pagination.totalPages}
                 totalItems={cachedData.pagination.totalItems}
                 itemsPerPage={cachedData.pagination.itemsPerPage}
