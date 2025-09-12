@@ -134,7 +134,7 @@ const fetchDashboardData = async () => {
 };
 
 function DashboardContent() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
   
@@ -146,15 +146,14 @@ function DashboardContent() {
 
   // Load from cache immediately on mount
   useEffect(() => {
-    // Load from cache immediately, regardless of session status
+    // Load from cache immediately
     const cache = getCache();
     if (cache) {
       setCachedData(cache);
-      setShowContent(true);
-    } else {
-      // Only show content when we have data
-      setShowContent(status !== 'loading');
     }
+    
+    // Only show content when we have determined authentication state
+    setShowContent(status !== 'loading');
     
     // Only fetch fresh data if authenticated
     if (status === "authenticated" && session?.user?.role === "customer") {
@@ -162,7 +161,6 @@ function DashboardContent() {
         .then(data => {
           setCachedData(data);
           setIsLoading(false);
-          setShowContent(true);
         })
         .catch(err => {
           setError(err.message);
@@ -173,8 +171,11 @@ function DashboardContent() {
             setCachedData(cache);
           }
         });
+    } else if (status === "unauthenticated") {
+      // Redirect to login if unauthenticated
+      router.push("/auth/login");
     }
-  }, [status, session]);
+  }, [status, session, router]);
 
   // Handle visibility change for background refresh
   useEffect(() => {
@@ -185,15 +186,11 @@ function DashboardContent() {
         session?.user?.role === "customer" &&
         cachedData
       ) {
-        // Only refresh if cache is older than 5 minutes
-        const cache = getCache();
-        if (!cache || (Date.now() - cache.timestamp) > 24 * 60 * 60 * 1000) {
-          // Background refresh without affecting UI
-          fetchDashboardData().catch(err => {
-            console.error("Background refresh failed:", err);
-            // Continue using current data
-          });
-        }
+        // Background refresh without affecting UI
+        fetchDashboardData().catch(err => {
+          console.error("Background refresh failed:", err);
+          // Continue using current data
+        });
       }
     };
 
@@ -202,13 +199,6 @@ function DashboardContent() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [status, session, cachedData]);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/login");
-    }
-  }, [status, router]);
 
   // Don't show anything until we determine what to display
   if (!showContent) {

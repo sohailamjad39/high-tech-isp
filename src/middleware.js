@@ -1,14 +1,14 @@
 // src/middleware.js
 import { NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 /**
- * Simplified middleware for Turbopack compatibility
- * The error occurs due to module resolution issues in Turbopack
+ * Fixed middleware for Vercel deployment with Next.js 15
  */
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for static files and API routes that don't need protection
+  // Skip middleware for static files and public API routes
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon.ico") ||
@@ -22,7 +22,7 @@ export async function middleware(request) {
     return NextResponse.next();
   }
 
-  // Routes that should only be accessible when logged out (guest-only routes)
+  // Routes that should only be accessible when logged out
   const guestOnlyRoutes = [
     "/auth/login",
     "/register",
@@ -31,7 +31,7 @@ export async function middleware(request) {
     "/auth/verify",
   ];
 
-  // Routes that require authentication (authenticated-only routes)
+  // Routes that require authentication
   const authenticatedOnlyRoutes = [
     "/dashboard",
     "/dashboard/",
@@ -50,7 +50,7 @@ export async function middleware(request) {
     "/plans/checkout",
   ];
 
-  // Admin-only routes - only accessible by users with 'admin' role
+  // Admin-only routes
   const adminOnlyRoutes = [
     "/admin",
     "/admin/",
@@ -76,7 +76,7 @@ export async function middleware(request) {
     "/api/admin"
   ];
 
-  // Routes that admin should NOT access (customer dashboard routes)
+  // Routes that admin should NOT access
   const adminRestrictedRoutes = [
     "/dashboard",
     "/dashboard/",
@@ -89,107 +89,100 @@ export async function middleware(request) {
     "/dashboard/notifications"
   ];
 
-  // Check for NextAuth session cookie
-  const sessionCookie = request.cookies.get("next-auth.session-token");
+  try {
+    // Use next-auth/jwt to decode the token directly
+    const token = await getToken({ 
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET 
+    });
 
-  // Handle guest-only routes (auth pages)
-  if (guestOnlyRoutes.some((route) => pathname.startsWith(route))) {
-    if (sessionCookie) {
-      // User is authenticated, redirect to home
-      return NextResponse.redirect(new URL("/", request.url));
+    // Handle guest-only routes
+    if (guestOnlyRoutes.some((route) => pathname.startsWith(route))) {
+      if (token) {
+        // User is authenticated, redirect to home
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+      return NextResponse.next();
     }
-    return NextResponse.next();
-  }
 
-  // Handle authenticated-only routes
-  if (authenticatedOnlyRoutes.some((route) => pathname.startsWith(route))) {
-    if (!sessionCookie) {
-      // User is not authenticated, redirect to login with callback URL
-      const loginUrl = new URL("/auth/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-    
-    // User is authenticated, verify role-based access
-    try {
-      // Fetch session data to get user role
-      const sessionResponse = await fetch(new URL('/api/auth/session', request.url), {
-        headers: {
-          'cookie': `${sessionCookie.name}=${sessionCookie.value}`
-        },
-        next: { revalidate: 0 } // Don't cache
-      });
+    // Handle authenticated-only routes
+    if (authenticatedOnlyRoutes.some((route) => pathname.startsWith(route))) {
+      if (!token) {
+        // User is not authenticated, redirect to login
+        const loginUrl = new URL("/auth/login", request.url);
+        loginUrl.searchParams.set("callbackUrl", pathname);
+        return NextResponse.redirect(loginUrl);
+      }
       
-      const sessionData = await sessionResponse.json();
+      // User is authenticated, verify role-based access
+      const userRole = token.role;
       
-      if (sessionResponse.ok && sessionData.user) {
-        const userRole = sessionData.user.role;
-        
-        // Special handling for visitors trying to access dashboard
-        if (userRole === 'visitor' && pathname.startsWith('/dashboard')) {
-          return NextResponse.redirect(new URL('/plans', request.url));
-        }
-        
-        // Prevent admin from accessing customer dashboard routes
-        if (userRole === 'admin' && adminRestrictedRoutes.some(route => pathname.startsWith(route))) {
-          return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-        }
-        
-        // Admin-only routes access control
-        if (adminOnlyRoutes.some(route => pathname.startsWith(route))) {
-          if (userRole !== 'admin') {
-            return NextResponse.redirect(new URL('/unauthorized', request.url));
-          }
-          // Admin can access admin routes, continue
-        }
-        
-        // Role-based access control for other routes
-        if (pathname.startsWith('/admin') && userRole !== 'admin') {
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-        
-        if (pathname.startsWith('/tech') && !['tech', 'admin', 'ops'].includes(userRole)) {
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-        
-        if (pathname.startsWith('/dashboard') && !['customer', 'admin', 'support', 'tech', 'ops'].includes(userRole)) {
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-        
-        // Customer-specific routes
-        if (pathname.startsWith('/dashboard/billing') && !['customer', 'admin'].includes(userRole)) {
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-        
-        if (pathname.startsWith('/dashboard/usage') && !['customer', 'admin', 'tech'].includes(userRole)) {
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-        
-        if (pathname.startsWith('/dashboard/appointments') && !['customer', 'admin', 'tech'].includes(userRole)) {
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-        
-        if (pathname.startsWith('/dashboard/tickets') && !['customer', 'admin', 'support'].includes(userRole)) {
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-        
-        // Support staff routes
-        if (pathname.startsWith('/support') && !['support', 'admin'].includes(userRole)) {
+      // Special handling for visitors trying to access dashboard
+      if (userRole === 'visitor' && pathname.startsWith('/dashboard')) {
+        return NextResponse.redirect(new URL('/plans', request.url));
+      }
+      
+      // Prevent admin from accessing customer dashboard routes
+      if (userRole === 'admin' && adminRestrictedRoutes.some(route => pathname.startsWith(route))) {
+        return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+      }
+      
+      // Admin-only routes access control
+      if (adminOnlyRoutes.some(route => pathname.startsWith(route))) {
+        if (userRole !== 'admin') {
           return NextResponse.redirect(new URL('/unauthorized', request.url));
         }
       }
-    } catch (error) {
-      console.error('Error verifying user role:', error);
-      // If we can't verify the role, deny access
-      return NextResponse.redirect(new URL('/auth/login', request.url));
+      
+      // Role-based access control for other routes
+      if (pathname.startsWith('/admin') && userRole !== 'admin') {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+      
+      if (pathname.startsWith('/tech') && !['tech', 'admin', 'ops'].includes(userRole)) {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+      
+      if (pathname.startsWith('/dashboard') && !['customer', 'admin', 'support', 'tech', 'ops'].includes(userRole)) {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+      
+      // Customer-specific routes
+      if (pathname.startsWith('/dashboard/billing') && !['customer', 'admin'].includes(userRole)) {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+      
+      if (pathname.startsWith('/dashboard/usage') && !['customer', 'admin', 'tech'].includes(userRole)) {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+      
+      if (pathname.startsWith('/dashboard/appointments') && !['customer', 'admin', 'tech'].includes(userRole)) {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+      
+      if (pathname.startsWith('/dashboard/tickets') && !['customer', 'admin', 'support'].includes(userRole)) {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+      
+      // Support staff routes
+      if (pathname.startsWith('/support') && !['support', 'admin'].includes(userRole)) {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
     }
-  }
 
-  // For all other routes, allow access
-  return NextResponse.next();
+    // For all other routes, allow access
+    return NextResponse.next();
+    
+  } catch (error) {
+    console.error('Middleware error:', error);
+    
+    // If there's an error processing the token, redirect to login
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 }
 
-// Configure which paths the middleware should run on
 export const config = {
   matcher: [
     /*
@@ -218,5 +211,10 @@ export const config = {
     "/tickets/:path*",
     "/appointments/:path*",
     "/usage/:path*",
+  ],
+  // Opt out of static generation for middleware
+  unstable_allowDynamic: [
+    '/node_modules/next-auth/**',
+    '/node_modules/jsonwebtoken/**',
   ],
 };
