@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { signOut, useSession } from 'next-auth/react';
 
 export default function SuccessPage() {
   const searchParams = useSearchParams();
@@ -13,6 +14,9 @@ export default function SuccessPage() {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState(null);
   const [error, setError] = useState(null);
+  
+  // Use next-auth session hook to get current session
+  const { data: session, update } = useSession();
 
   useEffect(() => {
     if (!sessionId || !planId || !userId) {
@@ -41,13 +45,14 @@ export default function SuccessPage() {
         
         setOrder(data.order);
         
-        // Dispatch event to notify navbar of session update
-        window.dispatchEvent(new CustomEvent('session-updated', { 
-          detail: { 
-            action: 'role-updated', 
-            timestamp: Date.now() 
-          } 
-        }));
+        // Force refresh the session to get updated role
+        await update();
+        
+        // Redirect to dashboard after a short delay to allow UI to show success message
+        setTimeout(() => {
+          window.location.href = '/dashboard/overview';
+        }, 3000);
+        
       } catch (err) {
         setError(err.message);
         console.error('Error processing success:', err);
@@ -57,7 +62,7 @@ export default function SuccessPage() {
     };
 
     fetchOrder();
-  }, [sessionId, planId, userId, setupFee]);
+  }, [sessionId, planId, userId, setupFee, update]);
 
   if (loading) {
     return (

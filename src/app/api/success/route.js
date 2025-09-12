@@ -154,6 +154,9 @@ export async function GET(request) {
     if (user.role === 'visitor') {
       user.role = 'customer';
       await user.save();
+      
+      // Log that we've updated the user role
+      console.log(`User ${userId} role updated from visitor to customer`);
     }
     
     // Return order details
