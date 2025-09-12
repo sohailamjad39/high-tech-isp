@@ -12,8 +12,8 @@ const fetchHeroImage = async () => {
   return {
     src: "/city.png",
     alt: "City skyline with fiber optic cables",
-    width: 1920,
-    height: 1080
+    width: 1280,
+    height: 720
   };
 };
 
@@ -48,15 +48,15 @@ export default function LandingPage() {
   const { data: heroImage } = useQuery({
     queryKey: ['hero-image'],
     queryFn: fetchHeroImage,
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
-    cacheTime: 7 * 24 * 60 * 60 * 1000, // 7 days
+    staleTime: 24 * 60 * 60 * 1000,
+    cacheTime: 7 * 24 * 60 * 60 * 1000,
   });
 
   const { data: whyChooseUsCards } = useQuery({
     queryKey: ['why-choose-us'],
     queryFn: fetchWhyChooseUsData,
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
-    cacheTime: 7 * 24 * 60 * 60 * 1000, // 7 days
+    staleTime: 24 * 60 * 60 * 1000, 
+    cacheTime: 7 * 24 * 60 * 60 * 1000, 
   });
 
   if (!whyChooseUsCards) {
@@ -84,7 +84,7 @@ export default function LandingPage() {
                 sizes="100vw"
                 style={{ objectFit: "cover", opacity: '70%' }}
                 priority
-                quality={80}
+                quality={75}
               />
             )}
 

@@ -216,7 +216,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] disabled:opacity-50 shadow-md hover:shadow-lg px-8 py-3 rounded-lg w-full font-medium text-white transition-all duration-200 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] disabled:opacity-50 shadow-md hover:shadow-lg px-8 py-3 rounded-lg w-full font-medium text-white transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <span className="flex justify-center items-center">

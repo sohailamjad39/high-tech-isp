@@ -65,9 +65,9 @@ export default function PlansPage() {
   const { data: session } = useQuery({
     queryKey: ['session'],
     queryFn: fetchSession,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
-    refetchInterval: 300000, // Every 5 minutes
+    staleTime: 24 * 60 * 60 * 1000, 
+    cacheTime: 42 * 60 * 60 * 1000, 
+    refetchInterval: 300000,
   });
 
   // Update visible plans based on screen size
