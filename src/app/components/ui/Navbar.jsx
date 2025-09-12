@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 
 // Confirmation Dialog Component
 function ConfirmationDialog({ isOpen, title, message, onConfirm, onCancel }) {
@@ -13,7 +14,7 @@ function ConfirmationDialog({ isOpen, title, message, onConfirm, onCancel }) {
     <div className="z-50 fixed inset-0 flex justify-center items-center">
       {/* Overlay */}
       <div 
-        className="absolute inset-0 bg-transparent bg-opacity-50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
         onClick={onCancel}
       ></div>
       
@@ -61,7 +62,6 @@ function ConfirmationDialog({ isOpen, title, message, onConfirm, onCancel }) {
   );
 }
 
-// Create a simple session context that can be initialized from props
 export default function Navbar({ initialSession = null }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -74,22 +74,6 @@ export default function Navbar({ initialSession = null }) {
   useEffect(() => {
     if (initialSession !== null) {
       setSession(initialSession);
-    }
-  }, [initialSession]);
-
-  // Fetch session on mount if not provided
-  useEffect(() => {
-    if (!initialSession) {
-      const fetchSession = async () => {
-        try {
-          const res = await fetch('/api/auth/session');
-          const data = await res.json();
-          setSession(data.user ? { user: data.user } : null);
-        } catch (error) {
-          setSession(null);
-        }
-      };
-      fetchSession();
     }
   }, [initialSession]);
 
@@ -158,26 +142,27 @@ export default function Navbar({ initialSession = null }) {
     };
   }, [isDropdownOpen]);
 
-  // Handle logout
+  // Handle logout - FIXED VERSION
   const handleLogout = async () => {
     try {
       // Close confirmation dialog
       setShowLogoutConfirm(false);
       
+      // Use next-auth signOut function which handles both client and server side
+      await signOut({ 
+        redirect: false 
+      });
+      
       // Clear the session state immediately
       setSession(null);
-      
-      // Call the logout API
-      await fetch('/api/auth/logout', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
       
       // Redirect to home
       router.push('/');
       router.refresh();
+      
+      // Dispatch a custom event to notify other components
+      window.dispatchEvent(new CustomEvent('session-updated'));
+      
     } catch (error) {
       console.error('Logout error:', error);
       // Still redirect even if there's an error
