@@ -210,7 +210,7 @@ export function NotificationSettings() {
         <button
           onClick={handleSave}
           disabled={isLoading}
-          className="inline-flex items-center bg-blue-600 hover:bg-blue-700 shadow-sm px-4 py-3 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium text-white text-sm transition-colors"
+          className="inline-flex items-center bg-blue-600 hover:bg-blue-700 shadow-sm px-4 py-3 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium text-white text-sm transition-colors cursor-pointer"
         >
           {isLoading ? (
             <>

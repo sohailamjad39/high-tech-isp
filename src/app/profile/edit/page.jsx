@@ -134,7 +134,7 @@ function CheckboxField({ label, name, checked, onChange, description }) {
 }
 
 function Button({ children, type = "button", variant = "primary", onClick, disabled = false, loading = false }) {
-  const baseClasses = "inline-flex items-center px-4 py-3 border border-transparent rounded-lg font-medium text-white text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
+  const baseClasses = "inline-flex items-center px-4 py-3 border border-transparent rounded-lg font-medium text-white text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer";
   
   const variants = {
     primary: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",

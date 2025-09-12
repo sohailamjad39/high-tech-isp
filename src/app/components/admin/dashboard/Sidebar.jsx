@@ -207,7 +207,7 @@ export default function Sidebar() {
         </Link>
 
         {/* Subscriptions */}
-        <Link
+        {/* <Link
           href="/admin/subscriptions"
           className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${
             pathname === "/admin/subscriptions"
@@ -228,10 +228,10 @@ export default function Sidebar() {
             )}
           </span>
           Subscriptions
-        </Link>
+        </Link> */}
 
         {/* Billing */}
-        <Link
+        {/* <Link
           href="/admin/billing"
           className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${
             pathname === "/admin/billing"
@@ -252,7 +252,7 @@ export default function Sidebar() {
             )}
           </span>
           Billing
-        </Link>
+        </Link> */}
 
         {/* Tickets */}
         <Link
@@ -279,7 +279,7 @@ export default function Sidebar() {
         </Link>
 
         {/* Technicians */}
-        <Link
+        {/* <Link
           href="/admin/technicians"
           className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${
             pathname === "/admin/technicians"
@@ -300,7 +300,7 @@ export default function Sidebar() {
             )}
           </span>
           Technicians
-        </Link>
+        </Link> */}
 
         {/* Plans */}
         <Link
@@ -327,7 +327,7 @@ export default function Sidebar() {
         </Link>
 
         {/* Coverage */}
-        <Link
+        {/* <Link
           href="/admin/coverage"
           className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${
             pathname === "/admin/coverage"
@@ -348,10 +348,10 @@ export default function Sidebar() {
             )}
           </span>
           Coverage
-        </Link>
+        </Link> */}
 
         {/* Offices */}
-        <Link
+        {/* <Link
           href="/admin/offices"
           className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${
             pathname === "/admin/offices"
@@ -372,10 +372,10 @@ export default function Sidebar() {
             )}
           </span>
           Offices
-        </Link>
+        </Link> */}
 
         {/* CMS */}
-        <Link
+        {/* <Link
           href="/admin/cms"
           className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${
             pathname === "/admin/cms"
@@ -396,10 +396,10 @@ export default function Sidebar() {
             )}
           </span>
           CMS
-        </Link>
+        </Link> */}
 
         {/* Promo Codes */}
-        <Link
+        {/* <Link
           href="/admin/promo-codes"
           className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${
             pathname === "/admin/promo-codes"
@@ -420,10 +420,10 @@ export default function Sidebar() {
             )}
           </span>
           Promo Codes
-        </Link>
+        </Link> */}
 
         {/* Reports */}
-        <Link
+        {/* <Link
           href="/admin/reports"
           className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${
             pathname === "/admin/reports"
@@ -444,10 +444,10 @@ export default function Sidebar() {
             )}
           </span>
           Reports
-        </Link>
+        </Link> */}
 
         {/* Audit Log */}
-        <Link
+        {/* <Link
           href="/admin/audit"
           className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${
             pathname === "/admin/audit"
@@ -468,10 +468,10 @@ export default function Sidebar() {
             )}
           </span>
           Audit Log
-        </Link>
+        </Link> */}
 
         {/* Settings */}
-        <Link
+        {/* <Link
           href="/admin/settings"
           className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${
             pathname === "/admin/settings"
@@ -492,7 +492,7 @@ export default function Sidebar() {
             )}
           </span>
           Settings
-        </Link>
+        </Link> */}
       </nav>
     </div>
   );

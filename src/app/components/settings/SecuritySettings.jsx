@@ -189,7 +189,7 @@ export function SecuritySettings() {
               </span>
             </div>
             <div className="mt-2 pt-2 border-gray-200 border-t">
-              <button className="font-medium text-blue-600 hover:text-blue-800 text-sm">
+              <button className="font-medium text-blue-600 hover:text-blue-800 text-sm cursor-pointer">
                 Sign out of all other sessions
               </button>
             </div>

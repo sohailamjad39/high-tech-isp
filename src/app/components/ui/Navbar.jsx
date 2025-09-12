@@ -209,11 +209,8 @@ export default function Navbar({ initialSession = null }) {
         { href: '/admin/dashboard', label: 'Dashboard' },
         { href: '/admin/customers', label: 'Manage Users' },
         { href: '/admin/plans', label: 'Manage Plans' },
-        { href: '/admin/billing', label: 'Billing History' },
-        { href: '/admin/reports', label: 'Reports' },
-        { href: '/admin/coverage', label: 'Coverage Map' },
         { href: '/profile', label: 'Profile' },
-        { href: '/admin/settings', label: 'Settings' },
+        { href: '/settings', label: 'Settings' },
       ];
     } else if (userRole === 'tech') {
       return [

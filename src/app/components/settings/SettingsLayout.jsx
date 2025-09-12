@@ -5,8 +5,7 @@ export function SettingsLayout({ children, activeTab, setActiveTab }) {
   const navItems = [
     { id: 'change-password', label: 'Change Password', icon: 'lock' },
     { id: 'security', label: 'Security', icon: 'shield' },
-    { id: 'notifications', label: 'Notifications', icon: 'bell' },
-    { id: 'billing', label: 'Billing', icon: 'credit-card' }
+    { id: 'notifications', label: 'Notifications', icon: 'bell' }
   ];
 
   return (
@@ -29,7 +28,7 @@ export function SettingsLayout({ children, activeTab, setActiveTab }) {
                     className={`w-full flex items-center px-4 py-3 rounded-lg text-left transition-colors ${
                       activeTab === item.id
                         ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'text-gray-700 hover:bg-gray-50'
+                        : 'text-gray-700 hover:bg-gray-50 cursor-pointer'
                     }`}
                   >
                     <SettingsIcon icon={item.icon} />
@@ -43,7 +42,9 @@ export function SettingsLayout({ children, activeTab, setActiveTab }) {
                   className="flex items-center hover:bg-gray-50 px-4 py-3 rounded-lg text-gray-700 text-left transition-colors"
                 >
                   <SettingsIcon icon="user" />
-                  <span className="ml-3 font-medium">Edit Profile</span>
+                  <span className="ml-3 font-medium">Edit Profile
+                    <span className='ml-5'><strong>↗</strong></span>
+                  </span>
                 </Link>
               </div>
             </nav>

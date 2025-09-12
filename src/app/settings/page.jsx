@@ -1,14 +1,12 @@
 // app/settings/page.jsx
 'use client'
 
-import Link from 'next/link';
 import { SessionProvider, useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { SettingsLayout } from '@/app/components/settings/SettingsLayout';
 import { ChangePassword } from '@/app/components/settings/ChangePassword';
 import { SecuritySettings } from '@/app/components/settings/SecuritySettings';
 import { NotificationSettings } from '@/app/components/settings/NotificationSettings';
-import { BillingSettings } from '@/app/components/settings/BillingSettings';
 
 export default function SettingsPage() {
   return (
@@ -37,8 +35,6 @@ function SettingsContent() {
         return <SecuritySettings />;
       case 'notifications':
         return <NotificationSettings />;
-      case 'billing':
-        return <BillingSettings />;
       default:
         return <ChangePassword />;
     }
