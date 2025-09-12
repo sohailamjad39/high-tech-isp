@@ -86,7 +86,8 @@ export async function middleware(request) {
     "/dashboard/appointments",
     "/dashboard/tickets",
     "/dashboard/profile",
-    "/dashboard/notifications"
+    "/dashboard/notifications",
+    "/plans/checkout"
   ];
 
   try {

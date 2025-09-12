@@ -14,7 +14,7 @@ function ConfirmationDialog({ isOpen, title, message, onConfirm, onCancel }) {
     <div className="z-50 fixed inset-0 flex justify-center items-center">
       {/* Overlay */}
       <div 
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        className="absolute inset-0 bg-transparent bg-opacity-50 backdrop-blur-sm backdrop:blur-2xl"
         onClick={onCancel}
       ></div>
       

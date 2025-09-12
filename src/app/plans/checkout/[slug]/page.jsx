@@ -301,7 +301,7 @@ export default function CheckoutPage({ params }) {
               <button
                 type="button"
                 disabled={isProcessing}
-                className={`bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] shadow-md hover:shadow-lg px-6 py-3 rounded-lg w-full font-medium text-white text-sm transition-all duration-200 transform hover:scale-105 ${
+                className={`bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] shadow-md hover:shadow-lg px-6 py-3 rounded-lg w-full font-medium text-white text-sm transition-all duration-200 transform hover:scale-105 cursor-pointer ${
                   isProcessing ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
                 onClick={handlePayment}

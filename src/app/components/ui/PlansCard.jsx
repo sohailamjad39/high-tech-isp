@@ -92,7 +92,7 @@ export default function PlansCard({ plan, onChoosePlan }) {
           {/* CTA Button */}
           <button
             onClick={() => onChoosePlan(plan)}
-            className="bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] shadow-md hover:shadow-lg px-6 py-3 rounded-lg w-full font-medium text-white hover:scale-105 transition-all duration-200 transform"
+            className="bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] shadow-md hover:shadow-lg px-6 py-3 rounded-lg w-full font-medium text-white hover:scale-105 transition-all duration-200 cursor-pointer transform"
           >
             Choose Plan
           </button>
