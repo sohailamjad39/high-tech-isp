@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 
 export default function SuccessPage() {
   const searchParams = useSearchParams();
@@ -14,10 +14,8 @@ export default function SuccessPage() {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState(null);
   const [error, setError] = useState(null);
-  
-  // Use next-auth session hook to get current session
-  const { data: session, update } = useSession();
 
+  // Auto-logout after successful order processing
   useEffect(() => {
     if (!sessionId || !planId || !userId) {
       setError('Missing required parameters in URL');
@@ -45,13 +43,8 @@ export default function SuccessPage() {
         
         setOrder(data.order);
         
-        // Force refresh the session to get updated role
-        await update();
-        
-        // Redirect to dashboard after a short delay to allow UI to show success message
-        setTimeout(() => {
-          window.location.href = '/dashboard/overview';
-        }, 3000);
+        // Logout the user after successful purchase
+        await handleLogout();
         
       } catch (err) {
         setError(err.message);
@@ -62,7 +55,35 @@ export default function SuccessPage() {
     };
 
     fetchOrder();
-  }, [sessionId, planId, userId, setupFee, update]);
+  }, [sessionId, planId, userId, setupFee]);
+
+  // Handle logout - same pattern as your example
+  const handleLogout = async () => {
+    try {
+      // Use next-auth signOut function which handles both client and server side
+      await signOut({ 
+        redirect: false 
+      });
+      
+      // Dispatch a custom event to notify other components
+      window.dispatchEvent(new CustomEvent('session-updated'));
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  // Redirect to login when component is mounted (after logout)
+  useEffect(() => {
+    if (!loading && !error && order) {
+      // Redirect to login after a brief delay to show the success message
+      const timer = setTimeout(() => {
+        window.location.href = '/auth/login';
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loading, error, order]);
 
   if (loading) {
     return (
@@ -139,16 +160,17 @@ export default function SuccessPage() {
         )}
         
         <div className="space-y-3">
-          <Link 
-            href="/dashboard/overview" 
-            className="block bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] px-6 py-3 rounded-lg font-medium text-white transition-all duration-200 cursor-pointer"
-          >
-            Go to Dashboard
-          </Link>
+          <div className="space-y-2 text-gray-500 text-sm">
+            <p>Your account has been upgraded to customer status.</p>
+            <p>For security reasons, please log in again to access your dashboard.</p>
+          </div>
           
-          <p className="text-gray-500 text-sm">
-            You'll receive a confirmation email with installation details shortly.
-          </p>
+          <button
+            onClick={() => window.location.href = '/auth/login'}
+            className="block bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] px-6 py-3 rounded-lg w-full font-medium text-white transition-all duration-200 cursor-pointer"
+          >
+            Login to Access Dashboard
+          </button>
         </div>
       </div>
     </div>

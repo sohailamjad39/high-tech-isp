@@ -78,9 +78,6 @@ export async function POST(request) {
       { status: 200 }
     );
     
-    // In a real implementation, you would use NextAuth's built-in signIn method
-    // For API-based authentication, we'll set a session cookie
-    // This is a simplified version - in production you'd use NextAuth's signIn properly
     
     return response;
     

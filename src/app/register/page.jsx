@@ -13,6 +13,7 @@ export default function RegisterPage() {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -90,8 +91,8 @@ export default function RegisterPage() {
       const data = await response.json();
       
       if (response.ok) {
-        // Registration successful, redirect to login
-        window.location.href = '/auth/login';
+        // Show success message instead of immediate redirect
+        setShowSuccess(true);
       } else {
         // Handle validation errors
         if (data.errors) {
@@ -107,9 +108,65 @@ export default function RegisterPage() {
     }
   };
 
+  // Show success message after successful registration
+  if (showSuccess) {
+    return (
+      <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-screen">
+        {/* Main Content */}
+        <main className="mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-md">
+          <div className="bg-white shadow-xl mt-15 border border-gray-200 rounded-2xl overflow-hidden">
+            {/* Header */}
+            <div className="px-6 pt-8 pb-6 text-center">
+              <svg className="mx-auto mb-4 w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <h1 className="mb-2 font-bold text-gray-900 text-2xl">Account Created Successfully!</h1>
+              <p className="text-gray-600 text-sm">Your HIGH TECH internet account has been created.</p>
+            </div>
+
+            {/* Success Content */}
+            <div className="px-8 pb-8">
+              <div className="bg-green-50 mb-6 p-4 border border-green-200 rounded-lg">
+                <p className="text-green-800 text-sm">
+                  Your account has been successfully created. You can now log in to access your dashboard and manage your service.
+                </p>
+              </div>
+              
+              {/* Login Button */}
+              <button
+                onClick={() => window.location.href = '/auth/login'}
+                className="bg-gradient-to-r from-[#2f83aa] hover:from-[#3da5d8] to-[#3f88cc] hover:to-[#56bde4] mt-6 px-4 py-2 rounded-lg w-full font-medium text-white text-sm transition-all duration-200"
+              >
+                Go to Login
+              </button>
+              
+              {/* Alternative Login Link */}
+              <div className="mt-4 text-gray-600 text-sm text-center">
+                Or{' '}
+                <Link
+                  href="/auth/login"
+                  className="font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  click here
+                </Link>{' '}
+                to log in
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-500 text-xs">
+              Welcome to HIGH TECH Internet - Fast, Reliable Service
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-screen">
-
       {/* Main Content */}
       <main className="mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-md">
         <div className="bg-white shadow-xl mt-15 border border-gray-200 rounded-2xl overflow-hidden">
